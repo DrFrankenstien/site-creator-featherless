@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SiteCreator - Automated Leads Scraper & Next.js Site Deployer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f5eee7;
+            --surface: #fffdf9;
+            --surface-2: #efe4d7;
+            --text: #1f1a16;
+            --muted: #6f655c;
+            --accent: #8a4b22;
+            --accent-dark: #6d3717;
+            --border: #ded0bf;
+            --shadow: 0 14px 40px rgba(31, 26, 22, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Inter, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(180deg, #f7efe8 0%, #f1e5da 100%);
+            color: var(--text);
+            line-height: 1.55;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(12px);
+            background: rgba(245, 238, 231, 0.9);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            font-size: 1rem;
+        }
+
+        .logo-mark {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: var(--text);
+            color: white;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.3rem;
+            color: var(--muted);
+            font-size: 0.95rem;
+            list-style: none;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.8rem 1.1rem;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(0, 0, 0, 0.04);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-dark);
+            transform: translateY(-1px);
+        }
+
+        .hero {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4.5rem 1.25rem 3rem;
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            padding: 0.35rem 0.7rem;
+            border-radius: 999px;
+            background: rgba(138, 75, 34, 0.12);
+            color: var(--accent);
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.2rem, 4vw, 3.4rem);
+            line-height: 1.05;
+            letter-spacing: -0.03em;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.02rem;
+            color: var(--muted);
+            max-width: 620px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin: 1.2rem 0 1rem;
+        }
+
+        .hero-points {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .hero-points li {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 0.35rem 0.6rem;
+        }
+
+        .hero-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.2rem 0.15rem 0.85rem;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .dots {
+            display: flex;
+            gap: 0.35rem;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--surface-2);
+        }
+
+        .card-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+        }
+
+        .panel {
+            background: #fcfaf6;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 0.85rem;
+        }
+
+        .panel h4 {
+            font-size: 0.92rem;
+            margin-bottom: 0.7rem;
+        }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.55rem 0;
+            border-bottom: 1px solid #ece0d3;
+            font-size: 0.94rem;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .pill {
+            font-size: 0.72rem;
+            padding: 0.2rem 0.45rem;
+            border-radius: 999px;
+            background: rgba(138, 75, 34, 0.12);
+            color: var(--accent);
+        }
+
+        .preview-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 0.8rem;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 0.7rem;
+        }
+
+        .preview-line {
+            height: 8px;
+            border-radius: 999px;
+            background: var(--surface-2);
+            margin-top: 0.55rem;
+        }
+
+        .preview-line.short {
+            width: 70%;
+        }
+
+        .section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2.4rem 1.25rem 0;
+        }
+
+        .section-heading {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .section-heading h2 {
+            font-size: 1.45rem;
+            letter-spacing: -0.02em;
+        }
+
+        .section-heading p {
+            color: var(--muted);
+            max-width: 480px;
+            font-size: 0.98rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .feature-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .feature-card h3 {
+            font-size: 1.05rem;
+            margin-bottom: 0.45rem;
+        }
+
+        .feature-card p {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .split {
+            display: grid;
+            grid-template-columns: 0.95fr 1.05fr;
+            gap: 1rem;
+            padding-top: 2.5rem;
+        }
+
+        .quote-card {
+            background: linear-gradient(135deg, #fffdf9 0%, #f8ebde 100%);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 1.4rem;
+            box-shadow: var(--shadow);
+        }
+
+        .quote-card p {
+            font-size: 1.05rem;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .quote-meta {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .stack-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 1.2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .stack-card ul {
+            list-style: none;
+            display: grid;
+            gap: 0.7rem;
+            margin-top: 0.8rem;
+        }
+
+        .stack-card li {
+            display: flex;
+            gap: 0.6rem;
+            align-items: start;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .stack-card li::before {
+            content: "•";
+            color: var(--accent);
+            font-size: 1rem;
+            line-height: 1.2;
+        }
+
+        .cta {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 1.25rem 4rem;
+        }
+
+        .cta-box {
+            background: var(--text);
+            color: white;
+            border-radius: 24px;
+            padding: 1.6rem 1.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        .cta-box h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .cta-box p {
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 0.95rem;
+        }
+
+        footer {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 3rem 1.25rem 1.8rem;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.3fr repeat(3, 1fr);
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-brand p {
+            color: var(--muted);
+            margin-top: 0.85rem;
+            font-size: 0.95rem;
+            max-width: 320px;
+        }
+
+        .footer-column h4 {
+            font-size: 0.86rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.9rem;
+        }
+
+        .footer-column ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .footer-column a {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-top: 1.2rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        .auth-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(31, 26, 22, 0.45);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem;
+        }
+
+        .auth-overlay.active {
+            display: flex;
+        }
+
+        .auth-card {
+            background: var(--surface);
+            width: 100%;
+            max-width: 440px;
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+            position: relative;
+            border: 1px solid var(--border);
+        }
+
+        .auth-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: var(--muted);
+        }
+
+        .auth-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1.3rem;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 0.7rem;
+            background: none;
+            border: none;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--muted);
+            cursor: pointer;
+        }
+
+        .auth-tab.active {
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+            margin-bottom: -1px;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .form-group input {
+            padding: 0.85rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: var(--accent);
+        }
+
+        @media (max-width: 900px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .split {
+                grid-template-columns: 1fr;
+            }
+
+            .card-body {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .section-heading {
+                flex-direction: column;
+                align-items: start;
+            }
+
+            .cta-box {
+                flex-direction: column;
+                align-items: start;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 0.6rem;
+                align-items: start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <div class="logo-mark">S</div>
+                SiteCreator
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="#how-it-works">How it works</a></li>
+                <li><a href="#details">What you get</a></li>
+                <li><a href="#about">Why it exists</a></li>
+            </ul>
+
+            <div class="nav-actions">
+                <button class="btn btn-ghost" onclick="openAuthModal('login')">Log in</button>
+                <button class="btn btn-primary" onclick="openAuthModal('signup')">Start free</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div>
+                <div class="eyebrow">For local service teams</div>
+                <h1>Find the right leads, then put something useful in front of them.</h1>
+                <p>SiteCreator pulls local business data from public directories, gives you a cleaner list to work from, and turns each lead into a simple web page you can actually send people to.</p>
+
+                <div class="hero-actions">
+                    <button class="btn btn-primary" onclick="openAuthModal('signup')">Try it out</button>
+                    <button class="btn btn-ghost" onclick="openAuthModal('login')">See how it works</button>
+                </div>
+
+                <ul class="hero-points">
+                    <li>Good for plumbers, cleaners, landscapers</li>
+                    <li>No heavy setup</li>
+                    <li>Works in one sitting</li>
+                </ul>
+            </div>
+
+            <div class="hero-card">
+                <div class="card-top">
+                    <span>Recent search</span>
+                    <div class="dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="panel">
+                        <h4>Leads found</h4>
+                        <div class="list-item"><span>Plumber Co.</span><span class="pill">New</span></div>
+                        <div class="list-item"><span>Northside Repairs</span><span class="pill">Ready</span></div>
+                        <div class="list-item"><span>River City HVAC</span><span class="pill">Draft</span></div>
+                    </div>
+
+                    <div class="panel">
+                        <h4>Page preview</h4>
+                        <div class="preview-card">
+                            <div class="preview-header">
+                                <strong>Citywide Plumbing</strong>
+                                <span>Draft</span>
+                            </div>
+                            <div class="preview-line"></div>
+                            <div class="preview-line short"></div>
+                            <div class="preview-line"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="how-it-works">
+            <div class="section-heading">
+                <h2>It is built to make the middle of the job easier.</h2>
+                <p>Instead of splitting lead gathering and web publishing into two separate tasks, SiteCreator keeps them in one place.</p>
+            </div>
+
+            <div class="grid-3">
+                <div class="feature-card">
+                    <h3>1. Start with a place and a trade</h3>
+                    <p>Enter the market you care about and pull local listings that are already there.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>2. Review the details</h3>
+                    <p>Cut through the clutter and keep contact info, service areas, and notes in one simple list.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>3. Publish a page</h3>
+                    <p>Turn each lead into a basic landing page that feels useful for follow-up rather than overbuilt.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section split" id="details">
+            <div class="quote-card">
+                <p>“The point is not to make something flashy. It is to get from a list of names to a page you can actually use without wasting the afternoon.”</p>
+                <div class="quote-meta">A simple workflow for agency teams and solo operators</div>
+            </div>
+
+            <div class="stack-card">
+                <h3>What you get in a typical run</h3>
+                <ul>
+                    <li>Lead names, phone numbers, and location details pulled into one place.</li>
+                    <li>A short page draft with business info and a clear contact point.</li>
+                    <li>A faster way to move from “found a lead” to “sent a follow-up.”</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section" id="about">
+            <div class="section-heading">
+                <h2>Built for the part of the job that usually feels messy.</h2>
+                <p>It is meant to be practical first and a little more polished second.</p>
+            </div>
+
+            <div class="grid-3">
+                <div class="feature-card">
+                    <h3>Less busywork</h3>
+                    <p>Keep the research and the follow-up in the same flow so things do not fall through the cracks.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Better handoff</h3>
+                    <p>Share a clean list and a draft page instead of a pile of notes and screenshots.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>More room to actually work</h3>
+                    <p>Spend less time setting up and more time calling, emailing, and getting the job done.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta">
+            <div class="cta-box">
+                <div>
+                    <h3>Start with a real lead list, not a blank page.</h3>
+                    <p>Create a free account and try a sample search to see how it feels in practice.</p>
+                </div>
+                <button class="btn btn-primary" onclick="openAuthModal('signup')">Get started</button>
+            </div>
+        </section>
+    </main>
+
+    <div class="auth-overlay" id="authModal">
+        <div class="auth-card">
+            <button class="auth-close" onclick="closeAuthModal()">&times;</button>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="loginTab" onclick="switchTab('login')">Log in</button>
+                <button class="auth-tab" id="signupTab" onclick="switchTab('signup')">Sign up</button>
+            </div>
+
+            <form class="auth-form" id="loginForm" onsubmit="event.preventDefault();">
+                <div class="form-group">
+                    <label>Email address</label>
+                    <input type="email" placeholder="you@company.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" placeholder="••••••••" required>
+                </div>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 0.3rem;">Sign in</button>
+            </form>
+
+            <form class="auth-form" id="signupForm" style="display: none;" onsubmit="event.preventDefault();">
+                <div class="form-group">
+                    <label>Full name</label>
+                    <input type="text" placeholder="John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label>Work email</label>
+                    <input type="email" placeholder="you@company.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Create password</label>
+                    <input type="password" placeholder="At least 8 characters" required>
+                </div>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 0.3rem;">Create account</button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-brand">
+                <a href="#" class="logo">
+                    <div class="logo-mark">S</div>
+                    SiteCreator
+                </a>
+                <p>A straightforward tool for pulling local lead data and turning it into a page without a lot of setup.</p>
+            </div>
+
+            <div class="footer-column">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="#">Lead list</a></li>
+                    <li><a href="#">Page drafts</a></li>
+                    <li><a href="#">Simple follow-up</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="#">How it works</a></li>
+                    <li><a href="#">Support</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">Privacy</a></li>
+                    <li><a href="#">Terms</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div>&copy; 2026 SiteCreator Inc.</div>
+            <div>Built for practical follow-up, not hype.</div>
+        </div>
+    </footer>
+
+    <script>
+        function openAuthModal(mode) {
+            document.getElementById('authModal').classList.add('active');
+            switchTab(mode);
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.remove('active');
+        }
+
+        function switchTab(mode) {
+            const loginTab = document.getElementById('loginTab');
+            const signupTab = document.getElementById('signupTab');
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+
+            if (mode === 'login') {
+                loginTab.classList.add('active');
+                signupTab.classList.remove('active');
+                loginForm.style.display = 'flex';
+                signupForm.style.display = 'none';
+            } else {
+                signupTab.classList.add('active');
+                loginTab.classList.remove('active');
+                signupForm.style.display = 'flex';
+                loginForm.style.display = 'none';
+            }
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('authModal');
+            if (event.target === modal) {
+                closeAuthModal();
+            }
+        }
+    </script>
+</body>
+</html>
