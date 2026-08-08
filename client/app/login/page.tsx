@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { loginUser } from "../lib/api";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,7 +31,15 @@ export default function LoginPage() {
 
   return (
     <div className="login-body">
-
+      <header className="site-header">
+        <Link className="logo" href="/">
+          <span>sc</span>SiteCreator
+        </Link>
+        <nav>
+          <Link href="/dashboard">Go to app</Link>
+        </nav>
+        <ThemeToggle />
+      </header>
 
       <main className="login-wrap">
         <form className="login-card" onSubmit={handleSubmit}>

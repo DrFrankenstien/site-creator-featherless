@@ -73,6 +73,22 @@ process.on("SIGUSR2", () => {
     process.exit(0);
 });
 
+const BASE_PORT = 10000;
+
+async function getNextPort(): Promise<number> {
+    try {
+        const sites = await siteModel.find({});
+        const usedPorts = new Set(sites.map(s => (s as any).port).filter(p => typeof p === "number"));
+        let p = BASE_PORT;
+        while (usedPorts.has(p)) {
+            p++;
+        }
+        return p;
+    } catch {
+        return BASE_PORT;
+    }
+}
+
 export const createSite = async (req: Request<{}, {}, { name: string, phone: string }>, res: Response) => {
     const { name, phone } = req.body
 
@@ -118,9 +134,11 @@ export const createSite = async (req: Request<{}, {}, { name: string, phone: str
         }
 
         try {
+            const assignedPort = await getNextPort();
             const newSite = new siteModel({
                 name,
                 phone,
+                port: assignedPort,
                 isDeployed: false
             });
             await newSite.save();
@@ -158,24 +176,31 @@ export const getSiteById = async (req: Request, res: Response) => {
     }
 }
 
+const terminalErrors = new Map<string, string>();
+
 export const editSite = async (req: Request, res: Response) => {
     const { siteId, prompt } = req.body
     if (!siteId || !prompt || typeof prompt !== "string") {
         return res.status(400).json({ error: "invalid params" })
     }
-    const firstCmd = "npm run dev"
-    const cmd = "agy"
-    const secondCmd = "type __done__ when you are done and do not run the site:"
-    const thirdCmd = ""
 
     const site = await siteModel.findById(siteId)
     if (!site) {
         return res.status(400).json({ error: "invalid params" })
     }
+
+    if (!site.port && !site.isDeployed) {
+        site.port = await getNextPort();
+        await site.save();
+    }
+
+    const devPort = site.port || 10000;
+    const firstCmd = `npm run dev -- -p ${devPort}`;
+    const cmd = "agy";
+
     const siteDir = getSiteDir(site.name);
 
-    console.log(`Running editSite commands via node-pty in ${siteDir}`);
-
+    console.log(`Running editSite commands via node-pty in ${siteDir} on port ${devPort}`);
 
     let terminalA = terminals.get(site.terminals[0]!)
     let terminalB = terminals.get(site.terminals[1]!)
@@ -187,8 +212,7 @@ export const editSite = async (req: Request, res: Response) => {
             rows: 30,
             cwd: siteDir,
             env: process.env
-        }
-        )
+        })
         terminals.set(site.terminals[0]!, terminalA)
 
         terminalB = pty.spawn("zsh", [], {
@@ -197,8 +221,7 @@ export const editSite = async (req: Request, res: Response) => {
             rows: 30,
             cwd: siteDir,
             env: process.env
-        }
-        )
+        })
         terminals.set(site.terminals[1]!, terminalB)
 
         terminalA.onExit(() => {
@@ -207,6 +230,7 @@ export const editSite = async (req: Request, res: Response) => {
         terminalB.onExit(() => {
             terminals.delete(site.terminals[1]!);
             initializedTerminals.delete(site.terminals[1]!);
+            terminalErrors.delete(site.terminals[1]!);
         });
 
         terminalB.onData((data) => {
@@ -214,32 +238,50 @@ export const editSite = async (req: Request, res: Response) => {
             if (data.includes("trust") || data.includes("Yes") || data.includes("yes")) {
                 terminalB?.write("\r");
             }
+            if (data.includes("experience so far") || data.includes("[0] Skip") || data.includes("Help us improve") || data.includes("[1] Good")) {
+                terminalB?.write("0\r");
+            }
+            if (data.includes(">")) {
+                terminalErrors.delete(site.terminals[1]!);
+            }
         });
 
         terminalA.write(`${firstCmd}\r`);
         terminalB.write(`${cmd}\r`);
     }
-    let output = "";
 
     if (initializedTerminals.has(site.terminals[1]!)) {
+        terminalErrors.delete(site.terminals[1]!);
         terminalB.write(`${prompt}\r`);
-    } else {
-        let seenEmail = false;
-        let listener: pty.IDisposable;
-        listener = terminalB.onData((data) => {
-            if (data.includes("dumitruphilip123@gmail.com")) {
-                seenEmail = true;
-            }
-            if (seenEmail && data.includes(">")) {
-                terminalB.write(`${prompt}\r`);
-                initializedTerminals.add(site.terminals[1]!);
-                listener.dispose();
-            }
-        });
+        return res.status(200).json({ code: 200, message: "Changes applied successfully.", port: site.port });
     }
 
+    if (terminalErrors.has(site.terminals[1]!)) {
+        const errorMsg = terminalErrors.get(site.terminals[1]!);
+        terminalErrors.delete(site.terminals[1]!);
+        return res.status(400).json({ error: errorMsg, isVerifying: true });
+    }
 
-    return res.status(200).json({ code: 200 })
+    let seenEmail = false;
+    let listener: pty.IDisposable;
+    listener = terminalB.onData((data) => {
+        if (data.includes("dumitruphilip123@gmail.com")) {
+            seenEmail = true;
+        }
+        if (data.includes("experience so far") || data.includes("[0] Skip") || data.includes("Help us improve") || data.includes("[1] Good")) {
+            terminalB.write("0\r");
+        }
+        if (data.includes(">")) {
+            terminalErrors.delete(site.terminals[1]!);
+        }
+        if (seenEmail && data.includes(">")) {
+            terminalB.write(`${prompt}\r`);
+            initializedTerminals.add(site.terminals[1]!);
+            listener.dispose();
+        }
+    });
+
+    return res.status(200).json({ code: 200, message: "Changes applied successfully.", port: site.port });
 }
 
 export const deploy = async (req: Request, res: Response) => {
@@ -310,8 +352,9 @@ export const deploy = async (req: Request, res: Response) => {
         terminals.delete(site.terminals[0]!);
     });
 
-    // Update deployment status in DB
+    // Update deployment status in DB and remove dev port
     site.isDeployed = true;
+    site.port = null;
     await site.save();
 
     return res.status(200).send("success")

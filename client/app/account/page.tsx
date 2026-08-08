@@ -2,6 +2,7 @@
 
 import "../dashboard.css";
 import Link from "next/link";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default function AccountPage() {
   return (
@@ -17,6 +18,7 @@ export default function AccountPage() {
             Account
           </Link>
         </nav>
+        <ThemeToggle />
       </header>
 
       <main className="app-page account-page" id="account">

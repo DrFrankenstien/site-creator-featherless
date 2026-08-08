@@ -81,57 +81,84 @@ export async function POST(request: Request) {
     );
   }
 
+  // Graceful fallback if Featherless API key is not configured in .env.local
   if (!apiKey) {
-    return Response.json(
-      { message: "Featherless is not configured." },
-      { status: 500 },
-    );
+    const lower = prompt.toLowerCase();
+    const changes: EditorChanges = {};
+
+    if (lower.includes("welcom") || lower.includes("friend") || lower.includes("warm") || lower.includes("tone")) {
+      changes.headline = "Gentle, compassionate dental care for your whole family.";
+    } else if (lower.includes("service") || lower.includes("section") || lower.includes("add")) {
+      changes.addSection = true;
+    } else if (lower.includes("action") || lower.includes("button") || lower.includes("cta") || lower.includes("book")) {
+      changes.buttonLabel = "Schedule Your Visit";
+    } else if (lower.includes("headline") || lower.includes("title")) {
+      changes.headline = "Your local partner for bright, healthy smiles.";
+    } else if (lower.includes("blue") || lower.includes("navy")) {
+      changes.accent = "#1d4ed8";
+    } else if (lower.includes("green") || lower.includes("teal")) {
+      changes.accent = "#0f766e";
+    } else {
+      changes.headline = "Crafted with excellence for your business.";
+    }
+
+    return Response.json({
+      message: `Updated site preview for "${prompt.trim()}". (Add your FEATHERLESS_API_KEY in .env.local for live Featherless LLM completions)`,
+      changes,
+    });
   }
 
-  const response = await fetch(
-    "https://api.featherless.ai/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:3000",
-        "X-Title": "SiteCreator",
+  try {
+    const response = await fetch(
+      "https://api.featherless.ai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "http://localhost:3000",
+          "X-Title": "SiteCreator",
+        },
+        body: JSON.stringify({
+          model: process.env.FEATHERLESS_MODEL ?? "Qwen/Qwen2.5-7B-Instruct",
+          temperature: 0.4,
+          max_tokens: 240,
+          messages: [
+            {
+              role: "system",
+              content:
+                'You edit a dental-practice website. Return only valid JSON with this shape: {"message": string, "changes": {"headline"?: string, "buttonLabel"?: string, "accent"?: string, "addSection"?: boolean}}. Use short, polished copy. Only use a hex color for accent.',
+            },
+            { role: "user", content: prompt.trim() },
+          ],
+        }),
       },
-      body: JSON.stringify({
-        model: process.env.FEATHERLESS_MODEL ?? "Qwen/Qwen2.5-7B-Instruct",
-        temperature: 0.4,
-        max_tokens: 240,
-        messages: [
-          {
-            role: "system",
-            content:
-              'You edit a dental-practice website. Return only valid JSON with this shape: {"message": string, "changes": {"headline"?: string, "buttonLabel"?: string, "accent"?: string, "addSection"?: boolean}}. Use short, polished copy. Only use a hex color for accent.',
-          },
-          { role: "user", content: prompt.trim() },
-        ],
-      }),
-    },
-  );
-
-  if (!response.ok) {
-    return Response.json(
-      { message: "Featherless could not complete that request." },
-      { status: response.status },
     );
+
+    if (!response.ok) {
+      return Response.json(
+        { message: "Featherless could not complete that request." },
+        { status: response.status },
+      );
+    }
+
+    const payload = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const content = payload.choices?.[0]?.message?.content;
+
+    if (!content) {
+      return Response.json(
+        { message: "Featherless returned an empty response." },
+        { status: 502 },
+      );
+    }
+
+    return Response.json(asEditorResult(content));
+  } catch (err: any) {
+    return Response.json({
+      message: `Could not connect to Featherless API: ${err.message}`,
+      changes: {},
+    });
   }
-
-  const payload = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-  const content = payload.choices?.[0]?.message?.content;
-
-  if (!content) {
-    return Response.json(
-      { message: "Featherless returned an empty response." },
-      { status: 502 },
-    );
-  }
-
-  return Response.json(asEditorResult(content));
 }

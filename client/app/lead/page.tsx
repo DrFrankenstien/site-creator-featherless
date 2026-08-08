@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createSite } from "../lib/api";
+import ThemeToggle from "../components/ThemeToggle";
 
 function LeadContent() {
   const searchParams = useSearchParams();
@@ -14,19 +15,21 @@ function LeadContent() {
   const phone = searchParams.get("phone") || "(212) 555-0142";
   const address = searchParams.get("address") || "235 W 54th St, New York, NY";
 
+  const [initialPrompt, setInitialPrompt] = useState(`Create a site for ${name}`);
   const [deploying, setDeploying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleDeploy = async () => {
     setDeploying(true);
     setError(null);
+    const queryPrompt = encodeURIComponent(initialPrompt.trim());
     try {
-      await createSite(name, phone);
-      router.push(`/site?name=${encodeURIComponent(name)}`);
+      const res = await createSite(name, phone);
+      const siteId = res?.site?._id || "";
+      router.push(`/site/edit?id=${siteId}&name=${encodeURIComponent(name)}&prompt=${queryPrompt}`);
     } catch (err: any) {
       console.error(err);
-      // Even if site exists or server returns error, navigate to site page preview
-      router.push(`/site?name=${encodeURIComponent(name)}`);
+      router.push(`/site/edit?name=${encodeURIComponent(name)}&prompt=${queryPrompt}`);
     } finally {
       setDeploying(false);
     }
@@ -80,8 +83,33 @@ function LeadContent() {
           <p>
             Create a tailored business site with their details already filled in.
           </p>
+
+          <div style={{ marginTop: "1rem", marginBottom: "1rem" }}>
+            <label htmlFor="lead-prompt" style={{ display: "block", marginBottom: "6px", fontSize: "12px", fontWeight: 600 }}>
+              Initial AI Edit Prompt
+            </label>
+            <textarea
+              id="lead-prompt"
+              value={initialPrompt}
+              onChange={(e) => setInitialPrompt(e.target.value)}
+              placeholder="e.g. Create a site for my cafe called Almarino Cafe"
+              style={{
+                width: "100%",
+                minHeight: "70px",
+                padding: "8px 10px",
+                borderRadius: "8px",
+                border: "1px solid var(--line)",
+                background: "var(--input-bg)",
+                color: "var(--ink)",
+                fontSize: "13px",
+                fontFamily: "inherit",
+                resize: "vertical",
+              }}
+            />
+          </div>
+
           <button className="primary-button" onClick={handleDeploy} disabled={deploying} style={{ border: "none", cursor: "pointer", width: "100%" }}>
-            {deploying ? "Deploying site..." : "Deploy site →"}
+            {deploying ? "Creating & Sending to Editor..." : "Create & Send to Editor →"}
           </button>
         </aside>
       </div>
@@ -111,6 +139,7 @@ export default function LeadPage() {
           <Link href="/deployments">Deployments</Link>
           <Link href="/account">Account</Link>
         </nav>
+        <ThemeToggle />
       </header>
 
       <Suspense fallback={<div style={{ padding: "2rem" }}>Loading lead details...</div>}>

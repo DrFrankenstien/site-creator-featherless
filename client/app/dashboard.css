@@ -31,6 +31,108 @@
   --line: #dedfe5;
   --white: #fff;
   --orange: #d94f00;
+  --card-bg: #ffffff;
+  --body-bg: #ffffff;
+  --input-bg: #ffffff;
+}
+
+[data-theme="dark"] {
+  --ink: #f5eee7;
+  --muted: #a0a0ab;
+  --lilac: #1c1c20;
+  --blue: #182026;
+  --line: #2e2e34;
+  --white: #141416;
+  --orange: #d94f00;
+  --card-bg: #1e1e22;
+  --body-bg: #141416;
+  --input-bg: #1a1a1d;
+}
+
+[data-theme="dark"] body {
+  background: var(--body-bg);
+  color: var(--ink);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: #18181b;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #383840;
+}
+
+[data-theme="dark"] nav a {
+  color: #a0a0ab;
+}
+[data-theme="dark"] nav a:hover,
+[data-theme="dark"] nav a.current {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .welcome,
+[data-theme="dark"] .search-area,
+[data-theme="dark"] .lead,
+[data-theme="dark"] .result-card,
+[data-theme="dark"] .details-card,
+[data-theme="dark"] .deploy-card,
+[data-theme="dark"] .deployment-card,
+[data-theme="dark"] .settings-card,
+[data-theme="dark"] .plan-card,
+[data-theme="dark"] .login-card,
+[data-theme="dark"] .site-status,
+[data-theme="dark"] .site-preview,
+[data-theme="dark"] .site-actions {
+  background: var(--card-bg);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+[data-theme="dark"] .search-row input,
+[data-theme="dark"] label input,
+[data-theme="dark"] .settings-card input,
+[data-theme="dark"] .login-card input {
+  background: var(--input-bg);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .eyebrow {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .filter-row button {
+  background: var(--card-bg);
+  color: var(--muted);
+  border-color: var(--line);
+}
+[data-theme="dark"] .filter-row button.selected {
+  background: var(--ink);
+  color: var(--white);
+  border-color: var(--ink);
+}
+
+[data-theme="dark"] body:has(.site-header) .site-header {
+  background: #18181b;
+  border-color: var(--line);
+}
+
+[data-theme="dark"] body:has(.site-header) .site-header nav a {
+  color: var(--muted);
+}
+
+[data-theme="dark"] body:has(.site-header) .site-header nav a:hover {
+  background: #27272a;
+  color: var(--ink);
+}
+
+[data-theme="dark"] body:has(.site-header) .site-header nav a.current {
+  background: #2e2e36;
+  color: var(--ink);
+}
+
+[data-theme="dark"] body:has(.site-header) .site-header::after {
+  color: var(--muted);
+  border-color: var(--line);
 }
 * {
   box-sizing: border-box;

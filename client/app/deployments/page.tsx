@@ -4,6 +4,7 @@ import "../dashboard.css";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getSites } from "../lib/api";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default function DeploymentsPage() {
   const [sites, setSites] = useState<Array<{ _id: string; name: string; phone?: string; port?: number }>>([]);
@@ -33,6 +34,7 @@ export default function DeploymentsPage() {
           </Link>
           <Link href="/account">Account</Link>
         </nav>
+        <ThemeToggle />
       </header>
 
       <main className="app-page">
@@ -67,19 +69,7 @@ export default function DeploymentsPage() {
             );
           })}
 
-          <article className="deployment-card">
-            <div className="site-icon">W</div>
-            <div className="deployment-info">
-              <h2>Westside Dental Group</h2>
-              <p>westside-dental.sitecreator.app</p>
-              <span className="status live">
-                <i></i>Live
-              </span>
-            </div>
-            <Link href="/site?name=Westside%20Dental%20Group">
-              View details <span>→</span>
-            </Link>
-          </article>
+
         </section>
         <p className="empty-note">Your next deployment will appear here.</p>
       </main>

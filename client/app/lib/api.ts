@@ -71,6 +71,40 @@ export async function createSite(name: string, phone: string) {
   return await res.json();
 }
 
+export async function editSite(siteId: string, prompt: string) {
+  const token = getToken();
+  const res = await fetch(`${API_BASE}/site/edit`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ siteId, prompt }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Failed to update site" }));
+    throw new Error(err.error || "Failed to update site");
+  }
+  return await res.json();
+}
+
+export async function deploySite(siteId: string) {
+  const token = getToken();
+  const res = await fetch(`${API_BASE}/site/deploy`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ siteId }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Failed to deploy site" }));
+    throw new Error(err.error || "Failed to deploy site");
+  }
+  return await res.json();
+}
+
 export async function getSites() {
   const token = getToken();
   const res = await fetch(`${API_BASE}/site`, {
@@ -81,7 +115,8 @@ export async function getSites() {
   if (!res.ok) {
     return [];
   }
-  return await res.json();
+  const data = await res.json();
+  return Array.isArray(data) ? data : data.sites || [];
 }
 
 export async function getRunningSites() {
@@ -94,7 +129,8 @@ export async function getRunningSites() {
   if (!res.ok) {
     return [];
   }
-  return await res.json();
+  const data = await res.json();
+  return Array.isArray(data) ? data : data.sites || [];
 }
 
 export async function getSiteById(id: string) {
@@ -107,5 +143,6 @@ export async function getSiteById(id: string) {
   if (!res.ok) {
     return null;
   }
-  return await res.json();
+  const data = await res.json();
+  return data.site || data;
 }

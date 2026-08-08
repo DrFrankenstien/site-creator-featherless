@@ -4,6 +4,7 @@ import "../dashboard.css";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -28,6 +29,7 @@ export default function DashboardPage() {
           <Link href="/deployments">Deployments</Link>
           <Link href="/account">Account</Link>
         </nav>
+        <ThemeToggle />
       </header>
 
       <main>

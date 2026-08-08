@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { searchBusinesses } from "../lib/api";
+import ThemeToggle from "../components/ThemeToggle";
 
 function ResultsContent() {
   const searchParams = useSearchParams();
@@ -123,6 +124,7 @@ export default function ResultsPage() {
           <Link href="/deployments">Deployments</Link>
           <Link href="/account">Account</Link>
         </nav>
+        <ThemeToggle />
       </header>
 
       <Suspense fallback={<div style={{ padding: "2rem" }}>Loading results...</div>}>
