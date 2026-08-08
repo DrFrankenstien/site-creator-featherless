@@ -1,0 +1,862 @@
+@font-face {
+  font-family: "Suisse Intl";
+  src: url("https://cdn.honey.io/fonts/suisse-intl/400.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Suisse Intl";
+  src: url("https://cdn.honey.io/fonts/suisse-intl/600.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 600;
+}
+
+:root {
+  --editor-ink: #191a1f;
+  --editor-muted: #666a76;
+  --editor-line: #dfe2ec;
+  --editor-lilac: #f1f3fc;
+  --editor-panel: #fbfcff;
+  --editor-orange: #e65413;
+}
+
+.editor-page,
+.editor-page * {
+  box-sizing: border-box;
+}
+
+.editor-page {
+  min-height: 100vh;
+  color: var(--editor-ink);
+  background: var(--editor-lilac);
+  font-family: "Suisse Intl", BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.editor-page button,
+.editor-page textarea {
+  font: inherit;
+}
+
+.editor-page button {
+  cursor: pointer;
+}
+
+.editor-page button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.editor-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  min-height: 70px;
+  padding: 0 28px;
+  border-bottom: 1px solid var(--editor-line);
+  background: #fff;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--editor-ink);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -1px;
+  text-decoration: none;
+}
+
+.logo > span {
+  display: grid;
+  width: 29px;
+  height: 29px;
+  place-items: center;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--editor-ink);
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+.editor-site-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 11px;
+  border: 1px solid #e3e5ee;
+  border-radius: 999px;
+  color: #4c4f59;
+  background: #fafbff;
+  font-size: 13px;
+}
+
+.editor-site-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #64a875;
+}
+
+.editor-exit {
+  justify-self: end;
+  color: #4c4f59;
+  font-size: 14px;
+  font-weight: 600;
+  text-underline-offset: 4px;
+}
+
+.editor-workspace {
+  display: grid;
+  grid-template-columns: 390px minmax(0, 1fr);
+  align-items: start;
+  min-height: calc(100vh - 70px);
+}
+
+.ai-panel {
+  position: sticky;
+  top: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(130px, 1fr) auto;
+  gap: 0;
+  height: calc(100vh - 70px);
+  min-height: 560px;
+  padding: 28px 24px 20px;
+  border-right: 1px solid var(--editor-line);
+  background: var(--editor-panel);
+}
+
+.assistant-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 16px;
+  color: #4d5262;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.assistant-label span,
+.message-mark {
+  display: grid;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--editor-orange);
+  font-size: 12px;
+}
+
+.ai-panel h1 {
+  max-width: 290px;
+  margin: 0;
+  font-size: 34px;
+  letter-spacing: -2px;
+  line-height: 1.03;
+}
+
+.ai-panel-heading > p:last-child {
+  margin: 14px 0 0;
+  color: var(--editor-muted);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.prompt-list {
+  display: grid;
+  gap: 8px;
+  margin: 23px 0 18px;
+}
+
+.prompt-list button {
+  padding: 10px 12px;
+  border: 1px solid var(--editor-line);
+  border-radius: 10px;
+  color: #484b55;
+  background: #fff;
+  box-shadow: 0 1px 0 rgba(31, 37, 65, 0.03);
+  font-size: 13px;
+  text-align: left;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease;
+}
+
+.prompt-list button:hover:not(:disabled) {
+  border-color: #aeb4c6;
+  background: #f5f6fc;
+}
+
+.message-list {
+  display: flex;
+  min-height: 0;
+  gap: 12px;
+  overflow-y: auto;
+  flex-direction: column;
+  padding: 17px 2px 18px;
+  border-top: 1px solid #e5e7ef;
+  scrollbar-width: thin;
+}
+
+.message {
+  display: flex;
+  gap: 9px;
+  max-width: 95%;
+}
+
+.message p {
+  margin: 0;
+  padding: 11px 13px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.42;
+}
+
+.message.assistant p {
+  background: #e9ecf8;
+}
+
+.message.user {
+  align-self: flex-end;
+}
+
+.message.user p {
+  color: #fff;
+  background: #3a4050;
+}
+
+.editor-composer {
+  margin: 0 -4px;
+  padding: 16px 4px 2px;
+  border-top: 1px solid var(--editor-line);
+}
+
+.editor-composer label {
+  display: block;
+  margin: 0 0 8px 2px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.editor-composer > div {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid #cbd0df;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(39, 47, 79, 0.07);
+}
+
+.editor-composer textarea {
+  width: 100%;
+  min-height: 36px;
+  max-height: 110px;
+  padding: 5px;
+  border: 0;
+  outline: 0;
+  resize: vertical;
+  color: var(--editor-ink);
+  background: transparent;
+  font-size: 14px;
+}
+
+.editor-composer textarea::placeholder {
+  color: #979aa5;
+}
+
+.editor-composer button {
+  display: grid;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  color: #fff;
+  background: var(--editor-orange);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.preview-stage {
+  display: flex;
+  min-width: 0;
+  min-height: calc(100vh - 70px);
+  padding: 32px clamp(24px, 5vw, 72px) 50px;
+  flex-direction: column;
+}
+
+.preview-toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 14px;
+  min-height: 40px;
+  margin-bottom: 20px;
+  color: #5d6373;
+  font-size: 13px;
+}
+
+.preview-toolbar > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.preview-toolbar > span::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #67a779;
+  content: "";
+}
+
+.preview-devices {
+  display: flex;
+  gap: 2px;
+  justify-self: center;
+  padding: 3px;
+  border: 1px solid var(--editor-line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.preview-devices button {
+  padding: 5px 9px;
+  border: 0;
+  border-radius: 5px;
+  color: #777b86;
+  background: transparent;
+  font-size: 12px;
+}
+
+.preview-devices button.active {
+  color: var(--editor-ink);
+  background: #eef0f8;
+  font-weight: 600;
+}
+
+.publish-button {
+  justify-self: end;
+  padding: 11px 15px;
+  border: 0;
+  border-radius: 9px;
+  color: #fff;
+  background: var(--editor-orange);
+  box-shadow: 0 5px 12px rgba(169, 65, 13, 0.17);
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    transform 150ms ease,
+    background 150ms ease;
+}
+
+.publish-button:hover {
+  background: #c9450b;
+  transform: translateY(-1px);
+}
+
+.website-frame {
+  width: min(100%, 950px);
+  margin: 0 auto;
+  border: 1px solid #d8dce7;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 26px 65px rgba(39, 47, 79, 0.14);
+  transition: width 250ms ease;
+}
+
+.website-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border-bottom: 1px solid #e7e9ef;
+  background: #f7f8fb;
+}
+
+.website-bar i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #d5d7df;
+}
+
+.website-bar span {
+  margin-left: 9px;
+  color: #898d97;
+  font-size: 11px;
+}
+
+.website-canvas {
+  min-height: 640px;
+  background: #fff;
+}
+
+.mock-nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 26px clamp(25px, 5vw, 60px);
+  font-size: 13px;
+}
+
+.mock-nav strong {
+  font-size: 16px;
+  letter-spacing: -0.6px;
+}
+
+.mock-nav span {
+  color: #626670;
+}
+
+.mock-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 112px 30px 118px;
+  color: #fff;
+  background: var(--site-accent);
+  text-align: center;
+}
+
+.mock-hero::before,
+.mock-hero::after {
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 50%;
+  content: "";
+}
+
+.mock-hero::before {
+  top: -190px;
+  right: -110px;
+  width: 400px;
+  height: 400px;
+}
+
+.mock-hero::after {
+  bottom: -230px;
+  left: -160px;
+  width: 420px;
+  height: 420px;
+  border-color: rgba(255, 255, 255, 0.13);
+}
+
+.mock-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.mock-hero p,
+.mock-services > p {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+}
+
+.mock-hero h2 {
+  max-width: 600px;
+  margin: 20px auto 18px;
+  font-size: clamp(50px, 6vw, 80px);
+  letter-spacing: -4px;
+  line-height: 0.94;
+}
+
+.mock-hero > span {
+  font-size: 17px;
+  opacity: 0.9;
+}
+
+.mock-hero button {
+  display: block;
+  margin: 30px auto 0;
+  padding: 13px 19px;
+  border: 0;
+  border-radius: 7px;
+  color: var(--site-accent);
+  background: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.mock-services {
+  padding: 68px clamp(25px, 5vw, 60px);
+  color: #25272d;
+  text-align: center;
+}
+
+.mock-services > p {
+  color: #767a84;
+}
+
+.mock-services > div {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 26px;
+}
+
+.mock-services span {
+  padding: 20px 10px;
+  border-radius: 10px;
+  background: #f5f6fa;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.mock-quote {
+  padding: 60px 28px;
+  color: #fff;
+  background: #242937;
+  text-align: center;
+}
+
+.mock-quote p {
+  max-width: 540px;
+  margin: 0 auto 14px;
+  font-size: clamp(25px, 3vw, 38px);
+  letter-spacing: -1.5px;
+  line-height: 1.06;
+}
+
+.mock-quote span {
+  color: #bfc4d2;
+  font-size: 13px;
+}
+
+.add-section {
+  width: min(100%, 950px);
+  margin: 16px auto 0;
+  padding: 13px 16px;
+  border: 1px dashed #bfc5d6;
+  border-radius: 10px;
+  color: #5d6374;
+  background: rgba(255, 255, 255, 0.58);
+  font-size: 14px;
+  font-weight: 600;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease;
+}
+
+.add-section:hover {
+  border-color: #8a91a5;
+  background: #fff;
+}
+
+.mobile-preview {
+  width: min(100%, 400px);
+}
+
+.mobile-preview .mock-nav {
+  padding: 17px;
+}
+
+.mobile-preview .mock-nav span {
+  display: none;
+}
+
+.mobile-preview .mock-hero {
+  padding: 70px 18px;
+}
+
+.mobile-preview .mock-hero h2 {
+  font-size: 44px;
+  letter-spacing: -2.5px;
+}
+
+.mobile-preview .mock-services > div {
+  grid-template-columns: 1fr;
+}
+
+.mobile-preview .website-canvas {
+  min-height: 570px;
+}
+
+@media (max-width: 1050px) {
+  .editor-workspace {
+    grid-template-columns: 340px minmax(0, 1fr);
+  }
+
+  .ai-panel {
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
+  .preview-stage {
+    padding-right: 28px;
+    padding-left: 28px;
+  }
+}
+
+@media (max-width: 780px) {
+  .editor-workspace {
+    grid-template-columns: 238px minmax(0, 1fr);
+  }
+
+  .preview-stage {
+    min-height: calc(100vh - 70px);
+    padding: 20px 18px 30px;
+  }
+
+  .ai-panel {
+    min-height: 0;
+    padding: 22px 15px 16px;
+  }
+
+  .assistant-label {
+    margin-bottom: 12px;
+  }
+
+  .ai-panel h1 {
+    font-size: 27px;
+    letter-spacing: -1.5px;
+  }
+
+  .ai-panel-heading > p:last-child {
+    margin-top: 10px;
+    font-size: 13px;
+  }
+
+  .prompt-list {
+    gap: 6px;
+    margin: 18px 0 14px;
+  }
+
+  .prompt-list button {
+    padding: 8px 9px;
+    font-size: 12px;
+  }
+
+  .message p {
+    padding: 9px 10px;
+    font-size: 12px;
+  }
+
+  .message-mark {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    font-size: 10px;
+  }
+
+  .editor-composer label {
+    font-size: 11px;
+  }
+
+  .editor-composer > div {
+    gap: 4px;
+    padding: 6px;
+  }
+
+  .editor-composer textarea {
+    min-height: 34px;
+    font-size: 12px;
+  }
+
+  .editor-composer button {
+    width: 30px;
+    height: 30px;
+    font-size: 17px;
+  }
+
+  .preview-toolbar {
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+  }
+
+  .preview-devices {
+    grid-column: 1 / -1;
+    justify-self: start;
+    order: 3;
+  }
+
+  .website-canvas {
+    min-height: 0;
+  }
+
+  .mock-nav span {
+    display: none;
+  }
+
+  .mock-hero {
+    padding: 72px 16px 76px;
+  }
+
+  .mock-hero h2 {
+    font-size: clamp(34px, 7vw, 50px);
+    letter-spacing: -2.7px;
+  }
+
+  .mock-hero > span {
+    font-size: 14px;
+  }
+
+  .mock-services {
+    padding: 42px 16px;
+  }
+
+  .mock-services > div {
+    gap: 8px;
+    margin-top: 19px;
+  }
+
+  .mock-services span {
+    padding: 14px 8px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .editor-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-stage {
+    order: 1;
+    min-height: 0;
+    padding: 22px 18px 34px;
+  }
+
+  .ai-panel {
+    position: static;
+    order: 2;
+    height: auto;
+    min-height: 520px;
+    padding: 24px;
+    border-top: 1px solid var(--editor-line);
+    border-right: 0;
+  }
+
+  .assistant-label {
+    margin-bottom: 16px;
+  }
+
+  .ai-panel h1 {
+    font-size: 34px;
+    letter-spacing: -2px;
+  }
+
+  .ai-panel-heading > p:last-child {
+    margin-top: 14px;
+    font-size: 15px;
+  }
+
+  .prompt-list {
+    gap: 8px;
+    margin: 23px 0 18px;
+  }
+
+  .prompt-list button {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .message-list {
+    max-height: 260px;
+  }
+
+  .message p {
+    padding: 11px 13px;
+    font-size: 14px;
+  }
+
+  .message-mark {
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    font-size: 12px;
+  }
+
+  .editor-composer label {
+    font-size: 12px;
+  }
+
+  .editor-composer > div {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .editor-composer textarea {
+    min-height: 36px;
+    font-size: 14px;
+  }
+
+  .editor-composer button {
+    width: 34px;
+    height: 34px;
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 560px) {
+  .editor-header {
+    grid-template-columns: 1fr auto;
+    min-height: 62px;
+    padding: 0 17px;
+  }
+
+  .editor-site-name {
+    display: none;
+  }
+
+  .editor-workspace {
+    min-height: calc(100vh - 62px);
+  }
+
+  .ai-panel {
+    min-height: 500px;
+    padding: 24px 18px 18px;
+  }
+
+  .ai-panel h1 {
+    font-size: 32px;
+  }
+
+  .preview-stage {
+    padding: 18px 14px 28px;
+  }
+
+  .preview-toolbar {
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+  }
+
+  .preview-devices {
+    grid-column: 1 / -1;
+    justify-self: start;
+    order: 3;
+  }
+
+  .website-canvas {
+    min-height: 0;
+  }
+
+  .mock-hero {
+    padding: 76px 18px 80px;
+  }
+
+  .mock-hero h2 {
+    font-size: clamp(42px, 13vw, 58px);
+    letter-spacing: -3px;
+  }
+
+  .mock-hero > span {
+    font-size: 15px;
+  }
+
+  .mock-services {
+    padding: 52px 20px;
+  }
+
+  .mock-services > div {
+    grid-template-columns: 1fr;
+  }
+}
