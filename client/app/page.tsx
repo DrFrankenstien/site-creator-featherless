@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import "./dashboard.css";
 
 export default function Home() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -9,6 +11,10 @@ export default function Home() {
     const saved = (localStorage.getItem("sitecreator-theme") as "light" | "dark") || "light";
     setTheme(saved);
     document.documentElement.setAttribute("data-theme", saved);
+    document.body.classList.add("landing-body");
+    return () => {
+      document.body.classList.remove("landing-body");
+    };
   }, []);
 
   const toggleTheme = () => {
@@ -19,61 +25,8 @@ export default function Home() {
     showToast(`Switched to ${nextTheme === "dark" ? "Dark Mode 🌙" : "Light Mode ☀️"}`);
   };
 
-  const showToast = (msg: string) => {
-    const container = document.getElementById("toastContainer");
-    if (!container) return;
-    const toast = document.createElement("div");
-    toast.className = "toast-msg";
-    toast.textContent = msg;
-    container.appendChild(toast);
-
-    setTimeout(() => {
-      toast.style.opacity = "0";
-      toast.style.transform = "translateY(10px)";
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
-  };
-
-  const openAuthModal = (mode: "login" | "signup") => {
-    switchTab(mode);
-    const modal = document.getElementById("authModal") as HTMLDialogElement;
-    if (modal) modal.showModal();
-  };
-
-  const closeAuthModal = () => {
-    const modal = document.getElementById("authModal") as HTMLDialogElement;
-    if (modal) modal.close();
-  };
-
-  const switchTab = (mode: "login" | "signup") => {
-    const loginTab = document.getElementById("loginTab");
-    const signupTab = document.getElementById("signupTab");
-    const loginForm = document.getElementById("loginForm");
-    const signupForm = document.getElementById("signupForm");
-
-    if (mode === "login") {
-      loginTab?.classList.add("active");
-      signupTab?.classList.remove("active");
-      if (loginForm) loginForm.style.display = "flex";
-      if (signupForm) signupForm.style.display = "none";
-    } else {
-      signupTab?.classList.add("active");
-      loginTab?.classList.remove("active");
-      if (signupForm) signupForm.style.display = "flex";
-      if (loginForm) loginForm.style.display = "none";
-    }
-  };
-
-  const togglePasswordVisibility = (inputId: string, btn: HTMLButtonElement) => {
-    const input = document.getElementById(inputId) as HTMLInputElement;
-    if (!input) return;
-    if (input.type === "password") {
-      input.type = "text";
-      btn.textContent = "Hide";
-    } else {
-      input.type = "password";
-      btn.textContent = "Show";
-    }
+  const showToast = (_msg: string) => {
+    // Toast notifications disabled per user request
   };
 
   const selectLead = (element: HTMLElement, name: string, location: string, phone: string) => {
@@ -151,77 +104,56 @@ export default function Home() {
 
   return (
     <>
-      <link
-        rel="preconnect"
-        href="https://fonts.googleapis.com"
-      />
-      <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossOrigin="anonymous"
-      />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet"
-      />
-
       <style dangerouslySetInnerHTML={{ __html: `
         :root {
-            --bg: #f5eee7;
-            --bg-gradient: linear-gradient(180deg, #f7efe8 0%, #ede2d5 100%);
-            --surface: #fffdf9;
-            --surface-2: #efe4d7;
-            --surface-3: #fcfaf6;
-            --text: #1f1a16;
-            --muted: #6f655c;
-            --dim: #94887c;
-            --accent: #8a4b22;
-            --accent-dark: #6d3717;
-            --accent-light: rgba(138, 75, 34, 0.1);
-            --border: #ded0bf;
-            --border-highlight: rgba(138, 75, 34, 0.35);
-            --shadow: 0 14px 40px rgba(31, 26, 22, 0.08);
-            --shadow-hover: 0 20px 50px rgba(31, 26, 22, 0.14);
+            --bg: #ffffff;
+            --bg-gradient: #ffffff;
+            --surface: #ffffff;
+            --surface-2: #f0f3ff;
+            --surface-3: #edf8fa;
+            --text: #171719;
+            --muted: #595a60;
+            --dim: #8a8b91;
+            --accent: #d94f00;
+            --accent-dark: #ba4200;
+            --accent-light: rgba(217, 79, 0, 0.08);
+            --border: #dedfe5;
+            --border-highlight: rgba(217, 79, 0, 0.4);
+            --shadow: 0 12px 30px rgba(27, 35, 56, 0.08);
+            --shadow-hover: 0 18px 40px rgba(27, 35, 56, 0.14);
             
-            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-            --font-serif: 'Instrument Serif', Georgia, serif;
-            --radius-lg: 24px;
-            --radius-md: 18px;
-            --radius-sm: 12px;
+            --font-sans: 'Suisse Intl', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --radius-sm: 6px;
             --radius-full: 999px;
         }
 
         [data-theme="dark"] {
             --bg: #14110f;
-            --bg-gradient: linear-gradient(180deg, #181412 0%, #0d0b0a 100%);
+            --bg-gradient: #14110f;
             --surface: #1e1916;
             --surface-2: #2a231f;
             --surface-3: #231d19;
             --text: #f5eee7;
             --muted: #b8ac9e;
             --dim: #7e7367;
-            --accent: #d97736;
-            --accent-dark: #f08e4d;
-            --accent-light: rgba(217, 119, 54, 0.15);
+            --accent: #d94f00;
+            --accent-dark: #ba4200;
+            --accent-light: rgba(217, 79, 0, 0.15);
             --border: #382f29;
-            --border-highlight: rgba(217, 119, 54, 0.4);
+            --border-highlight: rgba(217, 79, 0, 0.4);
             --shadow: 0 14px 40px rgba(0, 0, 0, 0.4);
             --shadow-hover: 0 20px 50px rgba(0, 0, 0, 0.6);
         }
 
         body {
             font-family: var(--font-sans);
-            background: var(--bg-gradient);
+            background: var(--bg);
             color: var(--text);
             line-height: 1.6;
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
-            transition: background 0.3s ease, color 0.3s ease;
-        }
-
-        .serif {
-            font-family: var(--font-serif);
-            font-weight: 400;
         }
 
         .toast-container {
@@ -256,59 +188,18 @@ export default function Home() {
             }
         }
 
-        .ambient-glow {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 0;
-            overflow: hidden;
-        }
-
-        .glow-spot {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(100px);
-            opacity: 0.25;
-            animation: floatGlow 12s ease-in-out infinite alternate;
-        }
-
-        .spot-1 {
-            top: -10%;
-            left: 20%;
-            width: 550px;
-            height: 550px;
-            background: var(--accent);
-        }
-
-        .spot-2 {
-            top: 50%;
-            right: -5%;
-            width: 450px;
-            height: 450px;
-            background: #d97736;
-        }
-
-        @keyframes floatGlow {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(30px, 40px) scale(1.1); }
-        }
-
-        header {
+        header.landing-header {
             position: sticky;
             top: 0;
             z-index: 1000;
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            background: rgba(245, 238, 231, 0.85);
+            background: rgba(255, 255, 255, 0.9);
             border-bottom: 1px solid var(--border);
-            transition: background 0.3s ease;
         }
 
-        [data-theme="dark"] header {
-            background: rgba(20, 17, 15, 0.85);
+        [data-theme="dark"] header.landing-header {
+            background: rgba(20, 17, 15, 0.9);
         }
 
         .nav-container {
@@ -320,26 +211,17 @@ export default function Home() {
             justify-content: space-between;
         }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            font-size: 1.05rem;
-        }
-
-        .logo-mark {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
+        .logo-mark-sc {
+            width: 29px;
+            height: 29px;
+            border-radius: 8px;
             background: var(--accent);
-            color: white;
+            color: #ffffff;
             display: grid;
             place-items: center;
-            font-weight: 800;
-            font-size: 1.05rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: -1px;
         }
 
         .nav-links {
@@ -353,6 +235,8 @@ export default function Home() {
 
         .nav-links a {
             transition: color 0.2s ease;
+            text-decoration: none;
+            color: #4e5058;
         }
 
         .nav-links a:hover {
@@ -378,49 +262,29 @@ export default function Home() {
             transition: all 0.2s ease;
         }
 
-        .theme-toggle-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            padding: 0.8rem 1.3rem;
-            border-radius: var(--radius-full);
+            padding: 0.75rem 1.3rem;
+            border-radius: var(--radius-sm);
             border: 1px solid transparent;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 0.95rem;
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
             font-family: inherit;
-        }
-
-        .btn-ghost {
-            background: transparent;
-            color: var(--text);
-        }
-
-        .btn-ghost:hover {
-            background: rgba(0, 0, 0, 0.05);
-        }
-
-        [data-theme="dark"] .btn-ghost:hover {
-            background: rgba(255, 255, 255, 0.08);
+            text-decoration: none;
         }
 
         .btn-primary {
             background: var(--accent);
             color: white;
-            box-shadow: var(--shadow);
         }
 
         .btn-primary:hover {
             background: var(--accent-dark);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-hover);
         }
 
         .btn-secondary {
@@ -431,12 +295,6 @@ export default function Home() {
 
         .btn-secondary:hover {
             border-color: var(--accent);
-            transform: translateY(-2px);
-        }
-
-        main {
-            position: relative;
-            z-index: 1;
         }
 
         .hero {
@@ -450,19 +308,12 @@ export default function Home() {
         }
 
         .eyebrow {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.35rem 0.85rem;
-            border-radius: var(--radius-full);
-            background: var(--accent-light);
-            color: var(--accent);
-            font-size: 0.78rem;
+            margin: 0 0 16px;
+            color: #565e73;
+            font-size: 11px;
             font-weight: 700;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-bottom: 1.2rem;
-            border: 1px solid var(--border-highlight);
         }
 
         .hero h1 {
@@ -470,7 +321,7 @@ export default function Home() {
             line-height: 1.08;
             letter-spacing: -0.03em;
             margin-bottom: 1.2rem;
-            font-weight: 800;
+            font-weight: 700;
         }
 
         .hero p {
@@ -497,9 +348,9 @@ export default function Home() {
         }
 
         .hero-points li {
-            background: var(--surface);
+            background: var(--surface-2);
             border: 1px solid var(--border);
-            border-radius: var(--radius-full);
+            border-radius: var(--radius-sm);
             padding: 0.35rem 0.75rem;
             display: inline-flex;
             align-items: center;
@@ -512,13 +363,6 @@ export default function Home() {
             border-radius: var(--radius-lg);
             padding: 1.25rem;
             box-shadow: var(--shadow);
-            transition: transform 0.15s ease-out, box-shadow 0.3s ease;
-            transform-style: preserve-3d;
-        }
-
-        .hero-card:hover {
-            box-shadow: var(--shadow-hover);
-            border-color: var(--border-highlight);
         }
 
         .card-top {
@@ -533,18 +377,6 @@ export default function Home() {
             margin-bottom: 1rem;
         }
 
-        .dots {
-            display: flex;
-            gap: 0.35rem;
-        }
-
-        .dot {
-            width: 9px;
-            height: 9px;
-            border-radius: 50%;
-            background: var(--surface-2);
-        }
-
         .demo-search-bar {
             display: flex;
             gap: 0.5rem;
@@ -556,28 +388,11 @@ export default function Home() {
             padding: 0.6rem 0.85rem;
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
-            background: var(--surface-3);
+            background: var(--bg);
             color: var(--text);
             font-family: inherit;
             font-size: 0.88rem;
             outline: none;
-        }
-
-        .status-pulse {
-            display: inline-block;
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: #10b981;
-            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-            animation: pulseGreen 2s infinite;
-            margin-right: 0.3rem;
-        }
-
-        @keyframes pulseGreen {
-            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
 
         .card-body {
@@ -587,13 +402,13 @@ export default function Home() {
         }
 
         .panel {
-            background: var(--surface-3);
+            background: var(--surface-2);
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
             padding: 1rem;
         }
 
-        .panel h4 {
+        .panel h2, .panel h3, .panel h4 {
             font-size: 0.9rem;
             margin-bottom: 0.75rem;
             display: flex;
@@ -614,17 +429,13 @@ export default function Home() {
         }
 
         .list-item:hover, .list-item.active {
-            background: var(--accent-light);
-        }
-
-        .list-item:last-child {
-            border-bottom: none;
+            background: rgba(217, 79, 0, 0.1);
         }
 
         .pill {
             font-size: 0.72rem;
             padding: 0.2rem 0.5rem;
-            border-radius: var(--radius-full);
+            border-radius: 4px;
             background: var(--accent-light);
             color: var(--accent);
             font-weight: 700;
@@ -639,26 +450,6 @@ export default function Home() {
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-        }
-
-        .preview-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.88rem;
-            color: var(--muted);
-            margin-bottom: 0.75rem;
-        }
-
-        .preview-line {
-            height: 8px;
-            border-radius: var(--radius-full);
-            background: var(--surface-2);
-            margin-top: 0.55rem;
-        }
-
-        .preview-line.short {
-            width: 65%;
         }
 
         .section {
@@ -679,7 +470,7 @@ export default function Home() {
             font-size: clamp(1.6rem, 2.5vw, 2.1rem);
             letter-spacing: -0.02em;
             max-width: 550px;
-            font-weight: 800;
+            font-weight: 700;
         }
 
         .section-heading p {
@@ -700,21 +491,13 @@ export default function Home() {
             border-radius: var(--radius-lg);
             padding: 1.6rem;
             box-shadow: var(--shadow);
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-hover);
-            border-color: var(--border-highlight);
+            transition: all 0.2s ease;
         }
 
         .feature-card-num {
-            font-family: var(--font-serif);
-            font-size: 2.2rem;
+            font-size: 1.8rem;
+            font-weight: 700;
             color: var(--accent);
-            line-height: 1;
             margin-bottom: 0.5rem;
         }
 
@@ -738,31 +521,26 @@ export default function Home() {
         }
 
         .quote-card {
-            background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+            background: var(--surface-2);
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
             padding: 2rem;
-            box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
 
         .quote-card p {
-            font-family: var(--font-serif);
-            font-size: 1.45rem;
+            font-size: 1.35rem;
             line-height: 1.35;
             color: var(--text);
             margin-bottom: 1.5rem;
-            font-style: italic;
         }
 
         .quote-meta {
             color: var(--muted);
             font-size: 0.88rem;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
         }
 
         .stack-card {
@@ -790,14 +568,6 @@ export default function Home() {
             align-items: flex-start;
             color: var(--muted);
             font-size: 0.98rem;
-        }
-
-        .stack-card li::before {
-            content: "✓";
-            color: var(--accent);
-            font-weight: 800;
-            font-size: 1.1rem;
-            line-height: 1.3;
         }
 
         .calc-box {
@@ -842,7 +612,7 @@ export default function Home() {
         }
 
         .calc-result {
-            background: var(--surface-3);
+            background: var(--surface-2);
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
             padding: 1.75rem;
@@ -850,10 +620,9 @@ export default function Home() {
         }
 
         .calc-result-num {
-            font-family: var(--font-serif);
-            font-size: 3.2rem;
+            font-size: 3rem;
+            font-weight: 700;
             color: var(--accent);
-            line-height: 1;
             margin: 0.5rem 0;
         }
 
@@ -864,31 +633,27 @@ export default function Home() {
         }
 
         .cta-box {
-            background: var(--text);
-            color: var(--bg);
+            background: var(--surface-2);
+            border: 1px solid var(--border);
             border-radius: var(--radius-lg);
             padding: 2.5rem 2.25rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 1.5rem;
-            box-shadow: var(--shadow-hover);
         }
 
         .cta-box h3 {
+            color: var(--text);
             font-size: 1.45rem;
             margin-bottom: 0.4rem;
-            font-weight: 800;
+            font-weight: 700;
         }
 
         .cta-box p {
-            color: rgba(255, 255, 255, 0.75);
+            color: var(--muted);
             font-size: 0.98rem;
             max-width: 580px;
-        }
-
-        [data-theme="dark"] .cta-box p {
-            color: rgba(0, 0, 0, 0.75);
         }
 
         .cta-box .btn-primary {
@@ -899,93 +664,28 @@ export default function Home() {
             white-space: nowrap;
         }
 
-        footer {
-            background: var(--surface);
-            border-top: 1px solid var(--border);
-            padding: 4rem 1.25rem 2rem;
-        }
-
-        .footer-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1.3fr repeat(3, 1fr);
-            gap: 2.5rem;
-            margin-bottom: 3rem;
-        }
-
-        .footer-brand p {
-            color: var(--muted);
-            margin-top: 1rem;
-            font-size: 0.95rem;
-            max-width: 320px;
-            line-height: 1.55;
-        }
-
-        .footer-column h4 {
-            font-size: 0.85rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-bottom: 1.1rem;
-        }
-
-        .footer-column ul {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 0.65rem;
-        }
-
-        .footer-column a {
-            color: var(--muted);
-            font-size: 0.95rem;
-            transition: color 0.2s ease;
-        }
-
-        .footer-column a:hover {
-            color: var(--accent);
-        }
-
-        .footer-bottom {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: var(--muted);
-            font-size: 0.88rem;
-        }
-
         dialog#authModal {
-            margin: auto;
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
+            padding: 2rem;
+            width: min(90vw, 420px);
             background: var(--surface);
             color: var(--text);
-            padding: 2.25rem;
-            max-width: 440px;
-            width: 90%;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
         }
 
         dialog#authModal::backdrop {
-            background: rgba(31, 26, 22, 0.55);
-            backdrop-filter: blur(6px);
+            background: rgba(0, 0, 0, 0.4);
         }
 
         .auth-close {
             position: absolute;
-            top: 1.25rem;
-            right: 1.25rem;
+            top: 1rem;
+            right: 1rem;
             background: none;
             border: none;
             font-size: 1.5rem;
             cursor: pointer;
             color: var(--muted);
-            line-height: 1;
         }
 
         .auth-tabs {
@@ -999,156 +699,147 @@ export default function Home() {
             padding: 0.75rem;
             background: none;
             border: none;
-            font-family: inherit;
-            font-size: 1rem;
-            font-weight: 700;
+            font-size: 0.95rem;
+            font-weight: 600;
             color: var(--muted);
             cursor: pointer;
-            transition: color 0.2s ease;
         }
 
         .auth-tab.active {
             color: var(--accent);
             border-bottom: 2px solid var(--accent);
-            margin-bottom: -1px;
         }
 
         .auth-form {
             display: flex;
             flex-direction: column;
-            gap: 1.1rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.4rem;
-            text-align: left;
-            position: relative;
+            gap: 1rem;
         }
 
         .form-group label {
+            display: block;
             font-size: 0.85rem;
             font-weight: 700;
-            color: var(--text);
+            margin-bottom: 0.4rem;
         }
 
         .form-group input {
-            padding: 0.85rem 1rem;
+            width: 100%;
+            padding: 0.75rem;
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
-            background: var(--surface-3);
+            background: var(--bg);
             color: var(--text);
-            font-family: inherit;
             font-size: 0.95rem;
-            outline: none;
-        }
-
-        .form-group input:focus {
-            border-color: var(--accent);
         }
 
         .password-input-wrapper {
             position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .password-input-wrapper input {
-            width: 100%;
-            padding-right: 2.5rem;
         }
 
         .password-toggle-btn {
             position: absolute;
             right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
             background: none;
             border: none;
             color: var(--muted);
+            font-size: 0.85rem;
             cursor: pointer;
+        }
+
+        footer.landing-footer {
+            display: block;
+            width: 100%;
+            margin: 0;
+            box-sizing: border-box;
+            border-top: 1px solid var(--border);
+            padding: 3.5rem clamp(24px, 4vw, 62px) 2.5rem;
+            background: var(--surface);
+        }
+
+        .footer-container {
+            width: 100%;
+            margin: 0;
+            display: grid;
+            grid-template-columns: 2.2fr 1fr 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .footer-brand p {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-top: 0.75rem;
+            max-width: 320px;
+        }
+
+        .footer-column h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .footer-column ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .footer-column a {
+            color: var(--muted);
+            text-decoration: none;
             font-size: 0.9rem;
         }
 
-        @media (max-width: 900px) {
-            .hero {
-                grid-template-columns: 1fr;
-            }
-
-            .grid-3 {
-                grid-template-columns: 1fr;
-            }
-
-            .split {
-                grid-template-columns: 1fr;
-            }
-
-            .card-body, .calc-box {
-                grid-template-columns: 1fr;
-            }
+        .footer-column a:hover {
+            color: var(--accent);
         }
 
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-
-            .section-heading {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .cta-box {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .footer-container {
-                grid-template-columns: 1fr;
-            }
-
-            .footer-bottom {
-                flex-direction: column;
-                gap: 0.8rem;
-                align-items: flex-start;
-            }
+        .footer-bottom {
+            width: 100%;
+            margin: 2.5rem 0 0;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--muted);
+            font-size: 0.85rem;
         }
-      `}} />
+      ` }} />
 
-      <div className="toast-container" id="toastContainer"></div>
+      <div id="toastContainer" className="toast-container"></div>
 
-      <div className="ambient-glow">
-        <div className="glow-spot spot-1"></div>
-        <div className="glow-spot spot-2"></div>
-      </div>
-
-      <header>
+      <header className="landing-header">
         <div className="nav-container">
-          <a href="#" className="logo">
-            <div className="logo-mark">S</div>
+          <Link className="logo" href="/">
+            <div className="logo-mark-sc">sc</div>
             SiteCreator
-          </a>
+          </Link>
 
           <ul className="nav-links">
             <li><a href="#how-it-works">How it works</a></li>
-            <li><a href="#details">What you get</a></li>
-            <li><a href="#calculator">Time Savings</a></li>
-            <li><a href="#about">Why it exists</a></li>
+            <li><a href="#calculator">Time savings</a></li>
+            <li><Link href="/dashboard">Dashboard</Link></li>
+            <li><Link href="/deployments">Deployments</Link></li>
           </ul>
 
           <div className="nav-actions">
-            <button className="theme-toggle-btn" id="themeBtn" title="Toggle Light/Dark Theme" onClick={toggleTheme}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="5"></circle>
-                <line x1="12" y1="1" x2="12" y2="3"></line>
-                <line x1="12" y1="21" x2="12" y2="23"></line>
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                <line x1="1" y1="12" x2="3" y2="12"></line>
-                <line x1="21" y1="12" x2="23" y2="12"></line>
-              </svg>
+            <button className="theme-toggle-btn" id="themeBtn" onClick={toggleTheme} aria-label="Toggle theme">
+              {theme === "dark" ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+                </svg>
+              )}
             </button>
-            <button className="btn btn-ghost" onClick={() => openAuthModal("login")}>Log in</button>
-            <button className="btn btn-primary" onClick={() => openAuthModal("signup")}>Start free</button>
+            <Link className="btn btn-secondary" href="/login">Log in</Link>
+            <Link className="btn btn-primary" href="/login">Get started</Link>
           </div>
         </div>
       </header>
@@ -1156,74 +847,66 @@ export default function Home() {
       <main>
         <section className="hero">
           <div>
-            <div className="eyebrow">
-              <span className="status-pulse"></span> For local service teams
-            </div>
-            <h1>Find the right leads, then put <span className="serif" style={{ fontSize: "1.15em", fontStyle: "italic", color: "var(--accent)" }}>something useful</span> in front of them.</h1>
-            <p>SiteCreator pulls local business data from public directories, gives you a cleaner list to work from, and turns each lead into a simple web page you can actually send people to.</p>
+
+
+
+
+
+            <h1>Find business leads without websites and deploy starter pages in minutes.</h1>
+            <p>SiteCreator connects local directory search with instant Next.js site generation so you can stop manually copying business info into site builders.</p>
 
             <div className="hero-actions">
-              <button className="btn btn-primary" onClick={() => openAuthModal("signup")}>Try it out free</button>
-              <button className="btn btn-secondary" onClick={() => openAuthModal("login")}>See how it works</button>
+              <Link className="btn btn-primary" href="/login">Start with a sample lead list →</Link>
+              <Link className="btn btn-secondary" href="/dashboard">Explore dashboard</Link>
             </div>
 
             <ul className="hero-points">
-              <li>Good for plumbers, cleaners, landscapers</li>
-              <li>No heavy setup</li>
-              <li>Works in one sitting</li>
+              <li>✓ Local directory indexing</li>
+              <li>✓ Pre-built Next.js pages</li>
+              <li>✓ One-click publishing</li>
             </ul>
           </div>
 
           <div className="hero-card" id="heroTiltCard">
             <div className="card-top">
-              <span>Interactive Lead Search & Page Preview</span>
-              <div className="dots">
-                <div className="dot"></div>
-                <div className="dot"></div>
-                <div className="dot"></div>
-              </div>
+              <span>Interactive Lead Search Sandbox</span>
+              <span id="leadStatusText" className="pill">3 Leads Found</span>
             </div>
 
             <div className="demo-search-bar">
-              <input type="text" id="tradeLocationInput" defaultValue="Plumbers in Austin, TX" placeholder="Enter trade & location..." />
-              <button className="btn btn-primary" style={{ padding: "0.6rem 0.9rem", fontSize: "0.85rem" }} onClick={simulateSearch}>
-                Run Search
-              </button>
+              <input type="text" id="tradeLocationInput" defaultValue="Plumbers in Austin, TX" />
+              <button className="btn btn-primary" style={{ padding: "0.5rem 1rem", fontSize: "0.88rem" }} onClick={simulateSearch}>Search</button>
             </div>
 
             <div className="card-body">
               <div className="panel">
-                <h4>
-                  <span>Leads found</span>
-                  <span style={{ fontSize: "0.75rem", color: "var(--muted)" }} id="leadStatusText">3 Ready</span>
-                </h4>
+                <h3>Local leads</h3>
                 <div id="leadsList">
-                  <div className="list-item active">
-                    <span>Plumber Co.</span><span className="pill">New</span>
+                  <div className="list-item active" onClick={(e) => selectLead(e.currentTarget, "Austin Plumber Co.", "Austin, TX", "(512) 555-9012")}>
+                    <span>Austin Plumber Co.</span><span className="pill">New</span>
                   </div>
-                  <div className="list-item">
-                    <span>Northside Repairs</span><span className="pill">Ready</span>
+                  <div className="list-item" onClick={(e) => selectLead(e.currentTarget, "Capital City Express", "Austin, TX", "(512) 555-8810")}>
+                    <span>Capital City Express</span><span className="pill">Ready</span>
                   </div>
-                  <div className="list-item">
-                    <span>River City HVAC</span><span className="pill">Draft</span>
+                  <div className="list-item" onClick={(e) => selectLead(e.currentTarget, "Apex Drain Masters", "Austin, TX", "(512) 555-4120")}>
+                    <span>Apex Drain Masters</span><span className="pill">Draft</span>
                   </div>
                 </div>
               </div>
 
               <div className="panel">
-                <h4>Page preview</h4>
+                <h3>Page preview</h3>
                 <div className="preview-card">
                   <div className="preview-header">
-                    <strong id="previewTitle" style={{ color: "var(--text)" }}>Plumber Co.</strong>
+                    <strong id="previewTitle" style={{ color: "var(--text)" }}>Austin Plumber Co.</strong>
                     <span className="pill" id="previewBadge">Draft Ready</span>
                   </div>
-                  <p style={{ fontSize: "0.78rem", color: "var(--muted)" }} id="previewDesc">24/7 Emergency Plumbing & Water Heater Repair in Austin, TX.</p>
+                  <p style={{ fontSize: "0.78rem", color: "var(--muted)" }} id="previewDesc">24/7 Emergency Service & Repair in Austin, TX. Contact: (512) 555-9012</p>
                   <div className="preview-line"></div>
                   <div className="preview-line short"></div>
-                  <div className="preview-line"></div>
-                  <a href="/site" className="btn btn-secondary" style={{ fontSize: "0.75rem", padding: "0.4rem 0.6rem", marginTop: "0.8rem", width: "100%", textAlign: "center" }}>
-                    View Live Next.js Page →
-                  </a>
+                  <Link href="/site" className="btn btn-secondary" style={{ fontSize: "0.75rem", padding: "0.4rem 0.6rem", marginTop: "0.8rem", width: "100%", textAlign: "center" }}>
+                    View Live Site →
+                  </Link>
                 </div>
               </div>
             </div>
@@ -1327,74 +1010,36 @@ export default function Home() {
         </section>
 
         <section className="cta">
+
           <div className="cta-box">
             <div>
               <h3>Start with a real lead list, not a blank page.</h3>
               <p>Create a free account and try a sample search to see how it feels in practice.</p>
             </div>
-            <button className="btn btn-primary" onClick={() => openAuthModal("signup")}>Get started</button>
+            <Link className="btn btn-primary" href="/login">Get started</Link>
           </div>
+
         </section>
       </main>
 
-      <dialog id="authModal">
-        <button className="auth-close" onClick={closeAuthModal}>&times;</button>
 
-        <div className="auth-tabs">
-          <button className="auth-tab active" id="loginTab" onClick={() => switchTab("login")}>Log in</button>
-          <button className="auth-tab" id="signupTab" onClick={() => switchTab("signup")}>Sign up</button>
-        </div>
 
-        <form className="auth-form" id="loginForm" onSubmit={(e) => { e.preventDefault(); showToast("🎉 Logged in successfully!"); closeAuthModal(); }}>
-          <div className="form-group">
-            <label>Email address</label>
-            <input type="email" placeholder="you@company.com" required />
-          </div>
-          <div className="form-group">
-            <label>Password</label>
-            <div className="password-input-wrapper">
-              <input type="password" id="loginPasswordInput" placeholder="••••••••" required />
-              <button type="button" className="password-toggle-btn" onClick={(e) => togglePasswordVisibility("loginPasswordInput", e.currentTarget)}>Show</button>
-            </div>
-          </div>
-          <button className="btn btn-primary" style={{ width: "100%", marginTop: "0.3rem" }} type="submit">Sign in</button>
-        </form>
 
-        <form className="auth-form" id="signupForm" style={{ display: "none" }} onSubmit={(e) => { e.preventDefault(); showToast("🚀 Account created successfully!"); closeAuthModal(); }}>
-          <div className="form-group">
-            <label>Full name</label>
-            <input type="text" placeholder="John Doe" required />
-          </div>
-          <div className="form-group">
-            <label>Work email</label>
-            <input type="email" placeholder="you@company.com" required />
-          </div>
-          <div className="form-group">
-            <label>Create password</label>
-            <div className="password-input-wrapper">
-              <input type="password" id="signupPasswordInput" placeholder="At least 8 characters" required />
-              <button type="button" className="password-toggle-btn" onClick={(e) => togglePasswordVisibility("signupPasswordInput", e.currentTarget)}>Show</button>
-            </div>
-          </div>
-          <button className="btn btn-primary" style={{ width: "100%", marginTop: "0.3rem" }} type="submit">Create account</button>
-        </form>
-      </dialog>
-
-      <footer>
+      <footer className="landing-footer">
         <div className="footer-container">
           <div className="footer-brand">
-            <a href="#" className="logo">
-              <div className="logo-mark">S</div>
+            <Link href="/" className="logo">
+              <div className="logo-mark-sc">sc</div>
               SiteCreator
-            </a>
+            </Link>
             <p>A straightforward tool for pulling local lead data and turning it into a page without a lot of setup.</p>
           </div>
 
           <div className="footer-column">
             <h4>Product</h4>
             <ul>
-              <li><a href="/dashboard">Lead list</a></li>
-              <li><a href="/deployments">Page drafts</a></li>
+              <li><Link href="/dashboard">Lead list</Link></li>
+              <li><Link href="/deployments">Page drafts</Link></li>
               <li><a href="#calculator">Simple follow-up</a></li>
             </ul>
           </div>
@@ -1423,6 +1068,9 @@ export default function Home() {
           <div>Built for practical follow-up, not hype.</div>
         </div>
       </footer>
+
+
+
     </>
   );
 }

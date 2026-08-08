@@ -48,7 +48,7 @@ export default function SitePage() {
         </section>
 
         <section className="site-actions">
-          <a href="#edit">Edit business details</a>
+          <Link href="/site/edit">Edit business details</Link>
           <a href="#copy">Copy site link</a>
           <a href="#unpublish" className="danger">
             Unpublish site

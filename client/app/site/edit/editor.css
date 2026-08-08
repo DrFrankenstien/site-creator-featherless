@@ -276,7 +276,7 @@
   height: 34px;
   place-items: center;
   border: 0;
-  border-radius: 9px;
+  border-radius: 99px;
   color: #fff;
   background: var(--editor-orange);
   font-size: 20px;
@@ -793,70 +793,5 @@
     width: 34px;
     height: 34px;
     font-size: 20px;
-  }
-}
-
-@media (max-width: 560px) {
-  .editor-header {
-    grid-template-columns: 1fr auto;
-    min-height: 62px;
-    padding: 0 17px;
-  }
-
-  .editor-site-name {
-    display: none;
-  }
-
-  .editor-workspace {
-    min-height: calc(100vh - 62px);
-  }
-
-  .ai-panel {
-    min-height: 500px;
-    padding: 24px 18px 18px;
-  }
-
-  .ai-panel h1 {
-    font-size: 32px;
-  }
-
-  .preview-stage {
-    padding: 18px 14px 28px;
-  }
-
-  .preview-toolbar {
-    grid-template-columns: 1fr auto;
-    gap: 12px;
-  }
-
-  .preview-devices {
-    grid-column: 1 / -1;
-    justify-self: start;
-    order: 3;
-  }
-
-  .website-canvas {
-    min-height: 0;
-  }
-
-  .mock-hero {
-    padding: 76px 18px 80px;
-  }
-
-  .mock-hero h2 {
-    font-size: clamp(42px, 13vw, 58px);
-    letter-spacing: -3px;
-  }
-
-  .mock-hero > span {
-    font-size: 15px;
-  }
-
-  .mock-services {
-    padding: 52px 20px;
-  }
-
-  .mock-services > div {
-    grid-template-columns: 1fr;
   }
 }

@@ -1,0 +1,17 @@
+import { model, Schema } from "mongoose";
+import { generateSecureHex } from "./site.service.js";
+
+
+
+const siteSchema = new Schema({
+    name: { type: String, required: true },
+    phone: String,
+    isDeployed: Boolean,
+    terminals: {
+        type: [String],
+        default: () => [generateSecureHex(16), generateSecureHex(16)],
+    }
+});
+
+
+export const siteModel = model("Site", siteSchema)

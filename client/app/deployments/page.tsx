@@ -1,7 +1,25 @@
+"use client";
+
 import "../dashboard.css";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getSites } from "../lib/api";
 
 export default function DeploymentsPage() {
+  const [sites, setSites] = useState<Array<{ _id: string; name: string; phone?: string; port?: number }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getSites()
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setSites(data);
+        }
+      })
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <>
       <header className="site-header">
@@ -29,6 +47,26 @@ export default function DeploymentsPage() {
         </section>
 
         <section className="deployment-list" aria-label="Deployed sites">
+          {sites.map((site) => {
+            const letter = site.name ? site.name.charAt(0).toUpperCase() : "S";
+            const sub = site.name.toLowerCase().replace(/[^a-z0-9]/g, "-");
+            return (
+              <article className="deployment-card" key={site._id || site.name}>
+                <div className="site-icon">{letter}</div>
+                <div className="deployment-info">
+                  <h2>{site.name}</h2>
+                  <p>{sub}.sitecreator.app</p>
+                  <span className="status live">
+                    <i></i>Live
+                  </span>
+                </div>
+                <Link href={`/site?name=${encodeURIComponent(site.name)}`}>
+                  View details <span>→</span>
+                </Link>
+              </article>
+            );
+          })}
+
           <article className="deployment-card">
             <div className="site-icon">W</div>
             <div className="deployment-info">
@@ -38,21 +76,8 @@ export default function DeploymentsPage() {
                 <i></i>Live
               </span>
             </div>
-            <Link href="/site">
+            <Link href="/site?name=Westside%20Dental%20Group">
               View details <span>→</span>
-            </Link>
-          </article>
-          <article className="deployment-card">
-            <div className="site-icon peach">B</div>
-            <div className="deployment-info">
-              <h2>Bright Smile Dental</h2>
-              <p>brightsmile-dental.sitecreator.app</p>
-              <span className="status building">
-                <i></i>Building
-              </span>
-            </div>
-            <Link href="/dashboard">
-              View lead <span>→</span>
             </Link>
           </article>
         </section>
