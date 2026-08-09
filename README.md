@@ -50,5 +50,6 @@ npm run dev
 The frontend should open at http://localhost:3000.
 Found an error?
 Email ayaan1mittal@gmail.com and let us know what happened.
-License
+
+License:
 This project has a License.
