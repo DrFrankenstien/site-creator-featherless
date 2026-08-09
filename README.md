@@ -40,12 +40,15 @@ cd server
 npm install
 npm run build
 npm start
+```
 Then start the frontend in another terminal:
+```
 cd client
 npm install
 npm run dev
+```
 The frontend should open at http://localhost:3000.
 Found an error?
 Email ayaan1mittal@gmail.com and let us know what happened.
 License
-This project uses the MIT License.
+This project has a License.
