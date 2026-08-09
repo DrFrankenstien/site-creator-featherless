@@ -69,7 +69,7 @@ site-creator/
 - **MongoDB**: Local instance running at `mongodb://localhost:27017` or MongoDB Atlas connection string
 - **GitHub CLI (`gh`)**: Authenticated (`gh auth login`)
 - **Vercel CLI (`vercel`)**: Authenticated (`vercel login`)
-
+- **AntiGravity CLI (`agy`)**: Authenticated 
 ---
 
 ### 🛠 Installation & Local Setup
