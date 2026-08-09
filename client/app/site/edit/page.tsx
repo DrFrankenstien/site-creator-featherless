@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, Suspense, type CSSProperties, type FormEve
 import { useSearchParams } from "next/navigation";
 import "./editor.css";
 import ThemeToggle from "../../components/ThemeToggle";
-import { getSites, getSiteById, editSite, deploySite } from "../../lib/api";
+import { getSites, getSiteById, editSite, deploySite, startSiteServer } from "../../lib/api";
 
 type Message = {
   id: number;
@@ -149,6 +149,92 @@ function EditSiteContent() {
   const [siteName, setSiteName] = useState(initialName);
   const [sitePort, setSitePort] = useState<number | null>(null);
   const [isDeployed, setIsDeployed] = useState<boolean>(false);
+  const [isSiteLoading, setIsSiteLoading] = useState<boolean>(true);
+
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const slug = siteName.toLowerCase().replace(/[^a-z0-9]/g, "-");
+  const siteDomain = `${slug}.sitecreator.app`;
+
+  const iframeSrc = isDeployed
+    ? `https://${siteDomain}`
+    : sitePort
+    ? `http://localhost:${sitePort}`
+    : "";
+
+  const refreshIframe = () => {
+    if (iframeRef.current && (sitePort || isDeployed)) {
+      try {
+        const targetSrc = isDeployed
+          ? `https://${siteDomain}`
+          : `http://localhost:${sitePort}`;
+        const url = new URL(targetSrc);
+        url.searchParams.set("_t", Date.now().toString());
+        iframeRef.current.src = url.toString();
+      } catch (e) {
+        if (iframeRef.current) {
+          iframeRef.current.src = iframeSrc;
+        }
+      }
+    }
+  };
+
+  // Always reset loading screen to true on page entry / route change
+  useEffect(() => {
+    setIsSiteLoading(true);
+  }, [siteIdParam]);
+
+  // Continuous health monitoring: show loading screen whenever site server is down/compiling, hide when live
+  useEffect(() => {
+    if (isDeployed) {
+      setIsSiteLoading(false);
+      return;
+    }
+
+    if (!sitePort) {
+      return;
+    }
+
+    const targetPort = sitePort;
+    let isMounted = true;
+    let pollInterval: NodeJS.Timeout | null = null;
+    let isServerLive = false;
+
+    const checkPortStatus = async () => {
+      try {
+        await fetch(`http://localhost:${targetPort}`, {
+          method: "GET",
+          mode: "no-cors",
+        });
+
+        if (isMounted) {
+          if (!isServerLive) {
+            isServerLive = true;
+            refreshIframe();
+            setTimeout(() => {
+              if (isMounted) {
+                setIsSiteLoading(false);
+              }
+            }, 1500);
+          }
+        }
+      } catch (err) {
+        // Dev server not working / compiling / unreachable -> show loading screen
+        if (isMounted) {
+          isServerLive = false;
+          setIsSiteLoading(true);
+        }
+      }
+    };
+
+    checkPortStatus();
+    pollInterval = setInterval(checkPortStatus, 1000);
+
+    return () => {
+      isMounted = false;
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [sitePort, isDeployed, activeSiteId]);
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -267,6 +353,10 @@ function EditSiteContent() {
       ]);
     } finally {
       setIsSending(false);
+      // Auto-refresh iframe preview after code edits
+      setTimeout(() => {
+        refreshIframe();
+      }, 2500);
     }
   }
 
@@ -279,11 +369,12 @@ function EditSiteContent() {
       if (siteIdParam) {
         try {
           const data = await getSiteById(siteIdParam);
-          if (isMounted && data) {
-            if (data._id) resolvedSiteId = data._id;
-            if (data.name) setSiteName(data.name);
-            if (typeof data.port === "number") setSitePort(data.port);
-            if (data.isDeployed) setIsDeployed(true);
+          const siteObj = data?.site || data;
+          if (isMounted && siteObj) {
+            if (siteObj._id) resolvedSiteId = siteObj._id;
+            if (siteObj.name) setSiteName(siteObj.name);
+            if (typeof siteObj.port === "number") setSitePort(siteObj.port);
+            if (siteObj.isDeployed) setIsDeployed(true);
           }
         } catch (e) { }
       } else {
@@ -291,19 +382,26 @@ function EditSiteContent() {
           const sites = await getSites();
           if (isMounted && Array.isArray(sites) && sites.length > 0) {
             const match = sites[0];
-            if (match?._id) resolvedSiteId = match._id;
-            if (match?.name) setSiteName(match.name);
-            if (typeof match?.port === "number") setSitePort(match.port);
-            if (match?.isDeployed) setIsDeployed(true);
+            const siteObj = match?.site || match;
+            if (siteObj?._id) resolvedSiteId = siteObj._id;
+            if (siteObj?.name) setSiteName(siteObj.name);
+            if (typeof siteObj?.port === "number") setSitePort(siteObj.port);
+            if (siteObj?.isDeployed) setIsDeployed(true);
           }
         } catch (e) { }
       }
 
       if (isMounted && resolvedSiteId) {
         setActiveSiteId(resolvedSiteId);
+        // Explicitly start Terminal A dev server if not running when mounting site editor
+        startSiteServer(resolvedSiteId).then((res) => {
+          if (isMounted && res && typeof res.port === "number") {
+            setSitePort(res.port);
+          }
+        }).catch(() => {});
       }
 
-      // Execute initial creation prompt automatically
+      // Execute initial creation prompt automatically if present
       if (isMounted && promptParam && promptParam.trim() && !promptExecutedRef.current) {
         promptExecutedRef.current = true;
         requestChange(promptParam.trim(), resolvedSiteId);
@@ -316,6 +414,10 @@ function EditSiteContent() {
       isMounted = false;
     };
   }, [siteIdParam, promptParam]);
+
+  const handleIframeLoad = () => {
+    setIsSiteLoading(false);
+  };
 
   const handlePromptChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
@@ -389,15 +491,6 @@ function EditSiteContent() {
       setIsPublishing(false);
     }
   }
-
-  const slug = siteName.toLowerCase().replace(/[^a-z0-9]/g, "-");
-  const siteDomain = `${slug}.sitecreator.app`;
-
-  const iframeSrc = isDeployed
-    ? `https://${siteDomain}`
-    : sitePort
-    ? `http://localhost:${sitePort}`
-    : "http://localhost:10000";
 
   const displayAddress = isDeployed
     ? siteDomain
@@ -543,6 +636,15 @@ function EditSiteContent() {
               >
                 Mobile
               </button>
+              <button
+                className="refresh-preview-button"
+                onClick={refreshIframe}
+                title="Refresh preview"
+                type="button"
+                style={{ marginLeft: "4px", padding: "4px 8px", fontSize: "12px", cursor: "pointer" }}
+              >
+                ↻ Refresh
+              </button>
             </div>
             <button
               className="publish-button"
@@ -564,10 +666,24 @@ function EditSiteContent() {
               <span>{displayAddress}</span>
             </div>
             <div className="website-canvas">
+              {isSiteLoading && (
+                <div className="site-loading-overlay">
+                  <div className="site-loading-card">
+                    <span className="message-mark site-spinner">✦</span>
+                    <h3>Launching {siteName}...</h3>
+                    <p>Starting dev server environment on port {sitePort || "10000"}...</p>
+                    <div className="site-progress-bar">
+                      <div className="site-progress-fill" />
+                    </div>
+                  </div>
+                </div>
+              )}
               <iframe
+                ref={iframeRef}
                 className="preview-iframe"
                 src={iframeSrc}
                 title={`${siteName} Live Preview`}
+                onLoad={handleIframeLoad}
               />
             </div>
           </div>
@@ -584,9 +700,24 @@ function EditSiteContent() {
   );
 }
 
+function FullScreenLoadingOverlay() {
+  return (
+    <div className="site-loading-overlay" style={{ position: "fixed", inset: 0, zIndex: 9999, background: "#0f1218" }}>
+      <div className="site-loading-card">
+        <span className="message-mark site-spinner">✦</span>
+        <h3>Launching Site...</h3>
+        <p>Starting dev server environment...</p>
+        <div className="site-progress-bar">
+          <div className="site-progress-fill" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function EditSitePage() {
   return (
-    <Suspense fallback={<div style={{ padding: "2rem" }}>Loading site editor...</div>}>
+    <Suspense fallback={<FullScreenLoadingOverlay />}>
       <EditSiteContent />
     </Suspense>
   );

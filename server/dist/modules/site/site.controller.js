@@ -1,30 +1,24 @@
-import type { Request, Response } from "express";
 import * as pty from "node-pty";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { siteModel } from "./site.model.js";
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-const getSiteDir = (siteName: string): string => {
+const getSiteDir = (siteName) => {
     const folderName = siteName.trim().toLowerCase().replaceAll(" ", "-").replace(/[^a-z0-9-_]/g, "");
     const sitesDir = path.resolve(process.cwd(), "sites");
-
     // Check if the exact folderName exists
     let siteDir = path.resolve(sitesDir, folderName);
     if (fs.existsSync(siteDir)) {
         return siteDir;
     }
-
     // Try collapsing multiple hyphens (e.g. "the-mood---speciality-coffee--drinks" -> "the-mood-speciality-coffee-drinks")
     const collapsed = folderName.replace(/-+/g, "-");
     siteDir = path.resolve(sitesDir, collapsed);
     if (fs.existsSync(siteDir)) {
         return siteDir;
     }
-
     // Try reading directory and doing a case-insensitive, hyphen-agnostic match
     try {
         if (fs.existsSync(sitesDir)) {
@@ -35,30 +29,28 @@ const getSiteDir = (siteName: string): string => {
                 return path.resolve(sitesDir, match);
             }
         }
-    } catch (e) {
+    }
+    catch (e) {
         console.error("Error reading sites directory:", e);
     }
-
     // Default to the original name if not found
     return path.resolve(sitesDir, folderName);
 };
-
-let terminals: Map<string, pty.IPty> = new Map<string, pty.IPty>()
-let initializedTerminals: Set<string> = new Set<string>()
-
+let terminals = new Map();
+let initializedTerminals = new Set();
 const cleanUpTerminals = () => {
     console.log("Cleaning up all active terminals...");
     for (const terminal of terminals.values()) {
         try {
             terminal.kill();
-        } catch (e) {
+        }
+        catch (e) {
             // ignore
         }
     }
     terminals.clear();
     initializedTerminals.clear();
 };
-
 process.on("exit", cleanUpTerminals);
 process.on("SIGINT", () => {
     cleanUpTerminals();
@@ -72,44 +64,42 @@ process.on("SIGUSR2", () => {
     cleanUpTerminals();
     process.exit(0);
 });
-
 const BASE_PORT = 10000;
-
-async function getNextPort(): Promise<number> {
+async function getNextPort() {
     try {
         const sites = await siteModel.find({});
-        const usedPorts = new Set(sites.map(s => (s as any).port).filter(p => typeof p === "number"));
+        const usedPorts = new Set(sites.map(s => s.port).filter(p => typeof p === "number"));
         let p = BASE_PORT;
         while (usedPorts.has(p)) {
             p++;
         }
         return p;
-    } catch {
+    }
+    catch {
         return BASE_PORT;
     }
 }
-
-const copyTemplateWithoutNodeModules = (src: string, dest: string) => {
+const copyTemplateWithoutNodeModules = (src, dest) => {
     fs.mkdirSync(dest, { recursive: true });
     const entries = fs.readdirSync(src, { withFileTypes: true });
     for (const entry of entries) {
-        if (entry.name === "node_modules" || entry.name === ".next" || entry.name === ".git" || entry.name === ".vercel" || entry.name === "package-lock.json") continue;
+        if (entry.name === "node_modules" || entry.name === ".next" || entry.name === ".git" || entry.name === ".vercel" || entry.name === "package-lock.json")
+            continue;
         const srcPath = path.join(src, entry.name);
         const destPath = path.join(dest, entry.name);
         if (entry.isDirectory()) {
             copyTemplateWithoutNodeModules(srcPath, destPath);
-        } else {
+        }
+        else {
             fs.copyFileSync(srcPath, destPath);
         }
     }
 };
-
-function generateCustomPageTsx(businessName: string, phone: string = "(212) 555-0142"): string {
+function generateCustomPageTsx(businessName, phone = "(212) 555-0142") {
     const lower = businessName.toLowerCase();
     const isDental = lower.includes("dent") || lower.includes("ortho") || lower.includes("smile") || lower.includes("teeth") || lower.includes("clinic");
     const isLaw = lower.includes("law") || lower.includes("legal") || lower.includes("attorney") || lower.includes("advocate");
     const isCafe = lower.includes("cafe") || lower.includes("caff") || lower.includes("coffee") || lower.includes("bakery") || lower.includes("bistro");
-
     if (isDental) {
         return `"use client";
 
@@ -240,7 +230,6 @@ export default function DentalPage() {
 }
 `;
     }
-
     if (isLaw) {
         return `"use client";
 
@@ -262,7 +251,6 @@ export default function LawPage() {
 }
 `;
     }
-
     // Default General Business / Service Template
     return `"use client";
 
@@ -310,48 +298,41 @@ export default function GeneralPage() {
 }
 `;
 }
-
-const customizeSiteTemplate = (sitePath: string, businessName: string, folderName: string, phone: string = "(212) 555-0142") => {
+const customizeSiteTemplate = (sitePath, businessName, folderName, phone = "(212) 555-0142") => {
     try {
         const pagePath = path.join(sitePath, "app", "page.tsx");
         const customContent = generateCustomPageTsx(businessName, phone);
         fs.writeFileSync(pagePath, customContent, "utf-8");
-
         const pkgPath = path.join(sitePath, "package.json");
         if (fs.existsSync(pkgPath)) {
             let pkgContent = fs.readFileSync(pkgPath, "utf-8");
             pkgContent = pkgContent.replace(/"name":\s*"[^"]*"/, `"name": "${folderName}"`);
             fs.writeFileSync(pkgPath, pkgContent, "utf-8");
         }
-    } catch (err) {
+    }
+    catch (err) {
         console.error("Error customizing template for site:", err);
     }
 };
-
-export const createSite = async (req: Request<{}, {}, { name: string, phone: string }>, res: Response) => {
-    const { name, phone } = req.body
-
+export const createSite = async (req, res) => {
+    const { name, phone } = req.body;
     if (!name || !phone || typeof name !== "string" || typeof phone !== "string") {
-        return res.status(400).json({ error: "invalid parameters" })
+        return res.status(400).json({ error: "invalid parameters" });
     }
-
     const folderName = name.trim().toLowerCase().replaceAll(" ", "-").replace(/[^a-z0-9-_]/g, "");
     const sitesDir = path.resolve(process.cwd(), "sites");
     if (!fs.existsSync(sitesDir)) {
         fs.mkdirSync(sitesDir, { recursive: true });
     }
-
     // Check if site already exists in database
     let site = await siteModel.findOne({ name });
     if (site) {
         return res.status(200).json({ message: "Site already exists", site });
     }
-
     try {
         const assignedPort = await getNextPort();
         const termAId = `term-a-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
         const termBId = `term-b-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-
         site = new siteModel({
             name,
             phone,
@@ -361,7 +342,6 @@ export const createSite = async (req: Request<{}, {}, { name: string, phone: str
         });
         await site.save();
         console.log(`Saved new site "${name}" to MongoDB with port ${assignedPort} and ID ${site._id}`);
-
         const sitePath = path.resolve(sitesDir, folderName);
         if (!fs.existsSync(sitePath)) {
             const templateSource = path.resolve(sitesDir, "almarino-caff");
@@ -369,7 +349,6 @@ export const createSite = async (req: Request<{}, {}, { name: string, phone: str
                 console.log(`Copying template files to ${sitePath}...`);
                 copyTemplateWithoutNodeModules(templateSource, sitePath);
                 customizeSiteTemplate(sitePath, name, folderName, phone);
-
                 console.log(`Running npm install in ${sitePath}...`);
                 const ptyProcess = pty.spawn("/bin/zsh", [], {
                     name: "xterm-256color",
@@ -379,10 +358,10 @@ export const createSite = async (req: Request<{}, {}, { name: string, phone: str
                     env: process.env,
                 });
                 ptyProcess.write("npm install\r");
-            } else {
+            }
+            else {
                 const cmd = `npx --yes create-next-app@latest ${folderName} --yes`;
                 console.log(`Running: ${cmd} in ${sitesDir} via node-pty`);
-
                 const ptyProcess = pty.spawn("/bin/zsh", [], {
                     name: "xterm-256color",
                     cols: 80,
@@ -390,28 +369,26 @@ export const createSite = async (req: Request<{}, {}, { name: string, phone: str
                     cwd: sitesDir,
                     env: process.env,
                 });
-
                 ptyProcess.write(`${cmd} && exit 0\r`);
             }
         }
-
         return res.status(200).json({ message: "Site created successfully", site });
-    } catch (err: any) {
+    }
+    catch (err) {
         console.error("Error creating site in DB:", err);
         return res.status(500).json({ error: "Failed to save site to database", details: err.message });
     }
-}
-
-export const getAllSites = async (req: Request, res: Response) => {
+};
+export const getAllSites = async (req, res) => {
     try {
         const sites = await siteModel.find({});
         return res.status(200).json({ sites });
-    } catch (error: any) {
+    }
+    catch (error) {
         return res.status(500).json({ error: "Failed to fetch sites", details: error.message });
     }
-}
-
-export const getSiteById = async (req: Request, res: Response) => {
+};
+export const getSiteById = async (req, res) => {
     try {
         const { id } = req.params;
         const site = await siteModel.findById(id);
@@ -419,33 +396,28 @@ export const getSiteById = async (req: Request, res: Response) => {
             return res.status(404).json({ error: "Site not found" });
         }
         return res.status(200).json({ site });
-    } catch (error: any) {
+    }
+    catch (error) {
         return res.status(500).json({ error: "Failed to fetch site", details: error.message });
     }
-}
-
-export const startSiteServer = async (req: Request, res: Response) => {
+};
+export const startSiteServer = async (req, res) => {
     const { siteId } = req.body;
     if (!siteId) {
         return res.status(400).json({ error: "siteId is required" });
     }
-
     const site = await siteModel.findById(siteId);
     if (!site) {
         return res.status(404).json({ error: "Site not found" });
     }
-
     if (!site.port && !site.isDeployed) {
         site.port = await getNextPort();
         await site.save();
     }
-
     const devPort = site.port || 10000;
     const siteDir = getSiteDir(site.name);
     const firstCmd = `npx next dev -p ${devPort}`;
-
-    let terminalA = terminals.get(site.terminals[0]!);
-
+    let terminalA = terminals.get(site.terminals[0]);
     if (!terminalA) {
         console.log(`[startSiteServer]: Starting Terminal A dev server for ${site.name} on port ${devPort} in ${siteDir}`);
         terminalA = pty.spawn("/bin/zsh", [], {
@@ -455,16 +427,13 @@ export const startSiteServer = async (req: Request, res: Response) => {
             cwd: siteDir,
             env: { ...process.env, PORT: String(devPort) }
         });
-        terminals.set(site.terminals[0]!, terminalA);
-
+        terminals.set(site.terminals[0], terminalA);
         terminalA.onExit(() => {
-            terminals.delete(site.terminals[0]!);
+            terminals.delete(site.terminals[0]);
         });
-
         terminalA.onData((data) => {
             console.log(`[TerminalA DevServer ${devPort}]:`, data);
         });
-
         terminalA.write(`${firstCmd}\r`);
         return res.status(200).json({
             message: `Site dev server started in Terminal A on port ${devPort}`,
@@ -473,7 +442,6 @@ export const startSiteServer = async (req: Request, res: Response) => {
             isNewProcess: true
         });
     }
-
     return res.status(200).json({
         message: `Site dev server already running in Terminal A on port ${devPort}`,
         port: devPort,
@@ -481,32 +449,24 @@ export const startSiteServer = async (req: Request, res: Response) => {
         isNewProcess: false
     });
 };
-
-const terminalErrors = new Map<string, string>();
-
-export const editSite = async (req: Request, res: Response) => {
-    const { siteId, prompt } = req.body
+const terminalErrors = new Map();
+export const editSite = async (req, res) => {
+    const { siteId, prompt } = req.body;
     if (!siteId || !prompt || typeof prompt !== "string") {
-        return res.status(400).json({ error: "invalid params" })
+        return res.status(400).json({ error: "invalid params" });
     }
-
-    const site = await siteModel.findById(siteId)
+    const site = await siteModel.findById(siteId);
     if (!site) {
-        return res.status(400).json({ error: "invalid params" })
+        return res.status(400).json({ error: "invalid params" });
     }
-
     if (!site.port && !site.isDeployed) {
         site.port = await getNextPort();
         await site.save();
     }
-
     const devPort = site.port || 10000;
     const cmd = "agy";
-
     const siteDir = getSiteDir(site.name);
-
-    let terminalB = terminals.get(site.terminals[1]!)
-
+    let terminalB = terminals.get(site.terminals[1]);
     if (!terminalB) {
         terminalB = pty.spawn("/bin/zsh", [], {
             name: "xterm-256color",
@@ -515,14 +475,12 @@ export const editSite = async (req: Request, res: Response) => {
             cwd: siteDir,
             env: { ...process.env, PORT: String(devPort) }
         });
-        terminals.set(site.terminals[1]!, terminalB);
-
+        terminals.set(site.terminals[1], terminalB);
         terminalB.onExit(() => {
-            terminals.delete(site.terminals[1]!);
-            initializedTerminals.delete(site.terminals[1]!);
-            terminalErrors.delete(site.terminals[1]!);
+            terminals.delete(site.terminals[1]);
+            initializedTerminals.delete(site.terminals[1]);
+            terminalErrors.delete(site.terminals[1]);
         });
-
         terminalB.onData((data) => {
             console.log(`[TerminalB agy]:`, data);
             if (data.includes("trust") || data.includes("Yes") || data.includes("yes")) {
@@ -532,33 +490,28 @@ export const editSite = async (req: Request, res: Response) => {
                 terminalB?.write("0\r");
             }
             if (data.includes(">")) {
-                terminalErrors.delete(site.terminals[1]!);
+                terminalErrors.delete(site.terminals[1]);
             }
         });
-
         terminalB.write(`${cmd}\r`);
     }
-
     // Check if this is an internal server startup request
     const isInitCmd = prompt === "__INIT_SERVER__" || prompt === "Start site dev server";
     if (isInitCmd) {
         return res.status(200).json({ code: 200, message: `Dev server started on port ${devPort}`, port: devPort });
     }
-
-    if (initializedTerminals.has(site.terminals[1]!)) {
-        terminalErrors.delete(site.terminals[1]!);
+    if (initializedTerminals.has(site.terminals[1])) {
+        terminalErrors.delete(site.terminals[1]);
         terminalB.write(`${prompt}\r`);
         return res.status(200).json({ code: 200, message: "Changes applied successfully.", port: site.port });
     }
-
-    if (terminalErrors.has(site.terminals[1]!)) {
-        const errorMsg = terminalErrors.get(site.terminals[1]!);
-        terminalErrors.delete(site.terminals[1]!);
+    if (terminalErrors.has(site.terminals[1])) {
+        const errorMsg = terminalErrors.get(site.terminals[1]);
+        terminalErrors.delete(site.terminals[1]);
         return res.status(400).json({ error: errorMsg, isVerifying: true });
     }
-
     let seenEmail = false;
-    let listener: pty.IDisposable;
+    let listener;
     listener = terminalB.onData((data) => {
         if (data.includes("dumitruphilip123@gmail.com")) {
             seenEmail = true;
@@ -567,55 +520,51 @@ export const editSite = async (req: Request, res: Response) => {
             terminalB.write("0\r");
         }
         if (data.includes(">")) {
-            terminalErrors.delete(site.terminals[1]!);
+            terminalErrors.delete(site.terminals[1]);
         }
         if (seenEmail && data.includes(">")) {
             terminalB.write(`${prompt}\r`);
-            initializedTerminals.add(site.terminals[1]!);
+            initializedTerminals.add(site.terminals[1]);
             listener.dispose();
         }
     });
-
     return res.status(200).json({ code: 200, message: "Changes applied successfully.", port: site.port });
-}
-
-export const deploy = async (req: Request, res: Response) => {
-    const { siteId } = req.body
-
-    const site = await siteModel.findById(siteId)
+};
+export const deploy = async (req, res) => {
+    const { siteId } = req.body;
+    const site = await siteModel.findById(siteId);
     if (!site) {
-        return res.status(400).json({ error: "invalid params" })
+        return res.status(400).json({ error: "invalid params" });
     }
-
     const siteDir = getSiteDir(site.name);
     const actualFolderName = path.basename(siteDir);
-
     // Construct the actual deploy command using the correct directory path and fixing option formatting
-    const cmd = `git init && git add . && (git commit -m "add files" || echo "No changes to commit") && git branch -M main && (gh repo create "${actualFolderName}" --public --source=. --remote=origin --push || git push -u origin main || echo "GitHub repo already exists or push failed") && vercel --prod --yes && cd .. && rm -rf "${actualFolderName}"`
-
+    const cmd = `git init && git add . && (git commit -m "add files" || echo "No changes to commit") && git branch -M main && (gh repo create "${actualFolderName}" --public --source=. --remote=origin --push || git push -u origin main || echo "GitHub repo already exists or push failed") && vercel --prod --yes && cd .. && rm -rf "${actualFolderName}"`;
     // Stop dev server terminal if running
     try {
-        const term0 = terminals.get(site.terminals[0]!);
+        const term0 = terminals.get(site.terminals[0]);
         if (term0) {
             try {
                 process.kill(-term0.pid, "SIGINT");
-            } catch (err) { }
+            }
+            catch (err) { }
             term0.kill();
         }
-    } catch (err) { }
-
+    }
+    catch (err) { }
     try {
-        const term1 = terminals.get(site.terminals[1]!);
+        const term1 = terminals.get(site.terminals[1]);
         if (term1) {
             try {
                 process.kill(-term1.pid, "SIGINT");
-            } catch (err) { }
+            }
+            catch (err) { }
             term1.kill();
         }
-    } catch (err) { }
-
+    }
+    catch (err) { }
     // Get or spawn terminal B
-    let terminal: pty.IPty;
+    let terminal;
     try {
         terminal = pty.spawn("/bin/zsh", [], {
             name: "xterm-256color",
@@ -624,38 +573,34 @@ export const deploy = async (req: Request, res: Response) => {
             cwd: siteDir,
             env: process.env
         });
-        terminals.set(site.terminals[0]!, terminal);
-    } catch (spawnErr: any) {
+        terminals.set(site.terminals[0], terminal);
+    }
+    catch (spawnErr) {
         console.error("Failed to spawn deploy terminal:", spawnErr);
         return res.status(500).json({ error: "Failed to spawn deploy terminal", details: spawnErr.message });
     }
-
     // Write the command after a brief delay so the shell can initialize properly
     setTimeout(() => {
         try {
             terminal.write(`${cmd}\n`);
-        } catch (err: any) {
+        }
+        catch (err) {
             console.error("Error writing deploy command to terminal:", err);
         }
     }, 1000);
-
     terminal.onData((data) => {
-        console.log(data)
+        console.log(data);
     });
-
     terminal.onExit(() => {
-        terminals.delete(site.terminals[0]!);
+        terminals.delete(site.terminals[0]);
     });
-
     // Update deployment status in DB and remove dev port
     site.isDeployed = true;
     site.port = null;
     await site.save();
-
-    return res.status(200).send("success")
-}
-
-export const getRunningSites = async (req: Request, res: Response) => {
+    return res.status(200).send("success");
+};
+export const getRunningSites = async (req, res) => {
     try {
         const sites = await siteModel.find({});
         const running = sites.filter(site => {
@@ -664,7 +609,9 @@ export const getRunningSites = async (req: Request, res: Response) => {
             return isARunning || isBRunning;
         });
         return res.status(200).json({ running });
-    } catch (error: any) {
+    }
+    catch (error) {
         return res.status(500).json({ error: "Failed to fetch running processes", details: error.message });
     }
-}
+};
+//# sourceMappingURL=site.controller.js.map

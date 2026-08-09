@@ -71,6 +71,23 @@ export async function createSite(name: string, phone: string) {
   return await res.json();
 }
 
+export async function startSiteServer(siteId: string) {
+  const token = getToken();
+  const res = await fetch(`${API_BASE}/site/start`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ siteId }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Failed to start site server" }));
+    throw new Error(err.error || "Failed to start site server");
+  }
+  return await res.json();
+}
+
 export async function editSite(siteId: string, prompt: string) {
   const token = getToken();
   const res = await fetch(`${API_BASE}/site/edit`, {

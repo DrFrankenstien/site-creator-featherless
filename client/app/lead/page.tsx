@@ -25,11 +25,14 @@ function LeadContent() {
     const queryPrompt = encodeURIComponent(initialPrompt.trim());
     try {
       const res = await createSite(name, phone);
-      const siteId = res?.site?._id || "";
-      router.push(`/site/edit?id=${siteId}&name=${encodeURIComponent(name)}&prompt=${queryPrompt}`);
+      if (res && res.site && res.site._id) {
+        router.push(`/site/edit?id=${res.site._id}&name=${encodeURIComponent(name)}&prompt=${queryPrompt}`);
+      } else {
+        setError("Failed to create site database entry.");
+      }
     } catch (err: any) {
-      console.error(err);
-      router.push(`/site/edit?name=${encodeURIComponent(name)}&prompt=${queryPrompt}`);
+      console.error("Site creation error:", err);
+      setError(err.message || "Failed to create site.");
     } finally {
       setDeploying(false);
     }
@@ -109,7 +112,7 @@ function LeadContent() {
           </div>
 
           <button className="primary-button" onClick={handleDeploy} disabled={deploying} style={{ border: "none", cursor: "pointer", width: "100%" }}>
-            {deploying ? "Creating & Sending to Editor..." : "Create & Send to Editor →"}
+            {deploying ? "Creating Site..." : "Create Site & Open Editor →"}
           </button>
         </aside>
       </div>
